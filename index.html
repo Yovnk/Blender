@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Editor FIX - T-Pose a Verde 4 Dir</title>
+<title>Editor FIX COMPLETO - PNG a Verde 4 Dir</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font-family:system-ui}
 #top{background:#111;padding:10px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #222}
@@ -17,33 +17,35 @@ button{padding:12px;border-radius:8px;border:0;font-weight:700;margin-top:6px;wi
 .th.active{border-color:#00ff88}.th span{position:absolute;bottom:0;left:0;right:0;background:#000c;font-size:9px;text-align:center;padding:2px}
 #panel{padding:10px;background:#111}
 #status{background:#0a0a0a;padding:8px;border-radius:6px;font-size:12px;color:#00ff88;margin-bottom:6px;border:1px solid #1a1a1a}
+small{color:#aaa;font-size:11px}
 </style>
 </head>
 <body>
 <div id="top">
-<strong>FIX: De T-Pose (Foto1) a Sprites Verdes (Foto 2-5)</strong>
+<strong>FIX COMPLETO: PNG Transparente -> Sprites Verdes</strong>
 <input type="file" id="file" accept="image/*">
 <div style="display:flex;gap:6px;width:100%"><button class="ghost" id="autoBone" style="width:50%">Auto calzar blanco</button><button class="ghost" id="btnReset" style="width:50%">Reset T-Pose</button></div>
 </div>
 <div id="canvasBox"><canvas id="c" width="1024" height="1024"></canvas></div>
 <div id="thumbs"></div>
 <div id="panel">
-<div id="status">Sube la Foto1 (T-Pose fondo negro) - FIX detecta blanco por brillo</div>
+<div id="status">Sube tu Foto 1 PNG (T-Pose) - Detecta blanco por brillo, sirve para PNG transparente y JPG negro de WhatsApp</div>
 <label><input type="checkbox" id="showBones" checked> Mostrar esqueleto</label>
 <label><input type="checkbox" id="showFloor" checked> Mostrar piso 45° verde</label>
-<label><input type="checkbox" id="showSprite" checked> Mostrar sprite original</label>
+<label><input type="checkbox" id="showSprite" checked> Mostrar sprite original (0.2)</label>
 <div style="display:flex;gap:6px">
 <button class="ghost" id="btnIdle" style="width:33%">T-Pose</button>
 <button class="ghost" id="btnIdlePose" style="width:33%">Pose IDLE</button>
 <button class="ghost" id="btnWalkPose" style="width:33%">Pose WALK</button>
 </div>
-<button class="ghost" id="btnFightPose">Pose PELEA</button>
+<button class="ghost" id="btnFightPose">Pose PELEA (Foto 3)</button>
 <div style="display:flex;gap:6px">
 <button class="ghost" id="btnCopy" style="width:50%">Copiar pose a 4 dirs</button>
-<button class="ghost" id="btnMirror" style="width:50%">Generar 45°/90° auto</button>
+<button class="ghost" id="btnMirror" style="width:50%">Auto 45°/90°/135°</button>
 </div>
 <button class="primary" id="exportGreen">EXPORTAR STRIP VERDE 4 DIR (como Fotos 2-5)</button>
 <button class="secondary" id="export">EXPORTAR ORIGINAL 8192x2048</button>
+<small>Con 1 Foto T-Pose generas IDLE/WALK/PELEA. FIX detecta blanco por brillo + alpha, no falla con PNG ni JPG negro.</small>
 </div>
 <canvas id="exportC" width="8192" height="2048" style="display:none"></canvas>
 <canvas id="greenC" width="2048" height="512" style="display:none"></canvas>
@@ -55,24 +57,30 @@ const exportC=document.getElementById('exportC'), ectx=exportC.getContext('2d');
 const greenC=document.getElementById('greenC'), gctx=greenC.getContext('2d');
 const statusEl=document.getElementById('status');
 function log(m){statusEl.textContent=m;}
-function getBoundsByBrightness(canvas){
+
+function getBounds(canvas){
   const w=canvas.width,h=canvas.height;
-  const d=canvas.getContext('2d').getImageData(0,0,w,h).data;
+  const ctx2=canvas.getContext('2d');
+  const d=ctx2.getImageData(0,0,w,h).data;
   let minX=w,minY=h,maxX=0,maxY=0,f=false;
   for(let y=0;y<h;y+=4){
     for(let x=0;x<w;x+=4){
       let i=(y*w+x)*4;
-      let r=d[i], g=d[i+1], b=d[i+2];
+      let r=d[i], g=d[i+1], b=d[i+2], a=d[i+3];
       let brightness=r+g+b;
-      if(brightness>450 && r>130 && g>130 && b>130){
+      let isWhite = a>20 && brightness>200 && r>80 && g>80 && b>80;
+      if(isWhite){
         if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; f=true;
       }
     }
   }
   if(!f) return {x:w*0.28,y:h*0.12,w:w*0.44,h:h*0.82};
   let padX=(maxX-minX)*0.08, padY=(maxY-minY)*0.05;
-  return {x:Math.max(0,minX-padX), y:Math.max(0,minY-padY), w:Math.min(w,maxX+padX)-Math.max(0,minX-padX), h:Math.min(h,maxY+padY)-Math.max(0,minY-padY)};
+  minX=Math.max(0,minX-padX); minY=Math.max(0,minY-padY);
+  maxX=Math.min(w,maxX+padX); maxY=Math.min(h,maxY+padY);
+  return {x:minX,y:minY,w:maxX-minX,h:maxY-minY};
 }
+
 function createAccurateSkeleton(b, dir){
   const x=b.x,y=b.y,w=b.w,h=b.h;
   const P=(rx,ry)=>({x:x+rx*w, y:y+ry*h});
@@ -88,11 +96,11 @@ function slice(){
   for(let i=0;i<cols;i++){
     const off=document.createElement('canvas'); off.width=fw; off.height=fh;
     off.getContext('2d').drawImage(srcImg,i*fw,0,fw,fh,0,0,fw,fh);
-    const b=getBoundsByBrightness(off);
+    const b=getBounds(off);
     frames.push({canvas:off,b:b,w:fw,h:fh});
     const sk=createAccurateSkeleton(b,i); computeLengths(sk); skeletons.push(sk);
   }
-  buildThumbs(); cur=0; draw(); log('FIX OK: Detectado por brillo');
+  buildThumbs(); cur=0; draw(); log('FIX OK: Detectado por brillo+alpha - calzado al blanco');
 }
 function buildThumbs(){
   const cont=document.getElementById('thumbs'); cont.innerHTML='';
@@ -238,6 +246,19 @@ document.getElementById('btnCopy').onclick=()=>{
     skeletons[i]=ns;
   }
   draw();
+};
+document.getElementById('btnMirror').onclick=()=>{
+  if(!skeletons[0]) return;
+  for(let i=1;i<4;i++){
+    let b=frames[i].b;
+    let sk=createAccurateSkeleton(b,i);
+    let base=skeletons[0];
+    let ob=frames[0].b;
+    function mapP(p){ let rx=(p.x-ob.x)/ob.w; let ry=(p.y-ob.y)/ob.h; return {x: b.x+rx*b.w, y: b.y+ry*b.h}; }
+    for(let k in base){ if(k==='_len') continue; sk[k]=mapP(base[k]); }
+    skeletons[i]=sk; computeLengths(sk);
+  }
+  cur=1; buildThumbs(); draw();
 };
 document.getElementById('export').onclick=()=>{
   ectx.clearRect(0,0,8192,2048);
