@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameLab - 4 Frames Bone Editor 3D</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0a0a0a;color:#fff;font-family:Inter,system-ui;display:flex;flex-direction:column;height:100vh}
+#top{height:52px;background:#18181b;display:flex;align-items:center;padding:0 12px;gap:10px;border-bottom:1px solid #2a2a2e}
+#main{flex:1;display:flex;overflow:hidden}
+#left{width:300px;background:#18181b;border-right:1px solid #2a2a2e;padding:12px;overflow:auto}
+#center{flex:1;background:#0e0e10;display:flex;flex-direction:column}
+#canvasBox{flex:1;display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(#1e1e1e 0% 25%, #151515 0% 50%) 0 0 / 20px 20px}
+canvas{background:transparent;cursor:grab}
+button{width:100%;padding:10px;border-radius:8px;border:0;font-weight:700;cursor:pointer;margin-top:8px}
+button.primary{background:#7c5cff;color:#fff}button.ghost{background:#2a2a2e;color:#fff}
+label{font-size:11px;color:#aaa;margin-top:10px;display:block}small{color:#666}
+.frameThumb{width:68px;height:68px;border:2px solid #333;border-radius:8px;margin:4px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:#000}
+.frameThumb.active{border-color:#7c5cff}
+</style>
+</head>
+<body>
+<div id="top">
+<strong>BONE EDITOR 4 FRAMES</strong>
+<input type="file" id="file" accept="image/*" style="max-width:220px">
+<button class="ghost" style="width:auto" id="autoBone">Auto detectar huesos</button>
+<span style="margin-left:auto;font-size:11px;opacity:.6">Tu sprite: maniqui blanco 4 direcciones -> rig 3D</span>
+</div>
+<div id="main">
+<div id="left">
+<label>Frames detectados (tu imagen)</label>
+<div id="thumbs"></div>
+<label>Frame actual: <b id="curLabel">0</b> / <span id="dirLabel">Front 0</span></label>
+<label><input type="checkbox" id="showBones" checked> Mostrar huesos / <input type="checkbox" id="showOnion"> Onion skin</label>
+<hr style="opacity:.15">
+<label>Modo:</label>
+<div style="display:flex;gap:6px"><button class="ghost" id="modePose" style="background:#7c5cff;color:#fff">MOVER (Pose)</button><button class="ghost" id="modeEdit">EDITAR HUESOS</button></div>
+<label>Instrucciones:</label>
+<small>1. Subi tu PNG (foto). 2. Auto detectar huesos. 3. Arrastra puntos azules para doblar brazos/piernas. 4. Cambia de frame y posea cada direccion. 5. Exporta.</small>
+<hr style="opacity:.15">
+<label>Animacion</label>
+<button class="ghost" id="btnIdle">Preset T-Pose</button>
+<button class="ghost" id="btnRun">Preset Corriendo (auto)</button>
+<button class="ghost" id="btnMirror">Copiar pose a los 4 frames</button>
+<hr style="opacity:.15">
+<button class="primary" id="export">EXPORTAR Spritesheet 8192x2048 strip4.png</button>
+<button class="ghost" id="exportJSON">Guardar huesos JSON</button>
+<small id="status">Sube tu imagen maniqui</small>
+</div>
+<div id="center">
+<div id="canvasBox"><canvas id="c" width="900" height="700"></canvas></div>
+</div>
+</div>
+<canvas id="exportC" width="8192" height="2048" style="display:none"></canvas>
+<script>
+const DIRS = ['Front 0','Front-R 45','Side 90','Back-Side 135'];
+let src
