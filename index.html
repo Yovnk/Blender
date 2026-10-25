@@ -3,35 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Real Bone Deform 4 Dir</title>
+<title>Bone Complete - Spine + Neck</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0a0a0a;color:#fff;font-family:system-ui}
 #top{background:#18181b;padding:10px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #333}
-#top strong{width:100%}input{width:100%;background:#2a2a2e;color:#fff;padding:6px;border-radius:6px}
+input{width:100%;background:#2a2a2e;color:#fff;padding:6px;border-radius:6px;border:1px solid #333}
 button{padding:12px;border-radius:8px;border:0;font-weight:700;margin-top:6px;width:100%}
-.primary{background:#7c5cff;color:#fff} .ghost{background:#2a2a2e;color:#fff}
-#canvasBox{width:100%;height:62vh;background:repeating-conic-gradient(#1e1e1e 0% 25%,#151515 0% 50%) 0 0 /20px 20px;display:flex;justify-content:center;align-items:center;touch-action:none}
+.primary{background:#7c5cff;color:#fff}.ghost{background:#2a2a2e;color:#fff}
+#canvasBox{width:100%;height:64vh;background:repeating-conic-gradient(#1e1e1e 0% 25%,#151515 0% 50%) 0 0 /20px 20px;display:flex;justify-content:center;align-items:center;touch-action:none}
 #c{max-width:100%;max-height:100%}
 #thumbs{display:flex;gap:4px;flex-wrap:wrap;padding:8px;background:#18181b}
 .th{width:72px;height:72px;border:2px solid #333;border-radius:8px;overflow:hidden;position:relative;background:#000}
-.th.active{border-color:#7c5cff} .th span{position:absolute;bottom:0;left:0;right:0;background:#000c;font-size:9px;text-align:center}
+.th.active{border-color:#7c5cff}.th span{position:absolute;bottom:0;left:0;right:0;background:#000c;font-size:9px;text-align:center}
 #panel{padding:10px;background:#18181b}
 #status{background:#000;padding:8px;border-radius:6px;font-size:12px;color:#7c5cff;margin-bottom:6px}
 </style>
 </head>
 <body>
 <div id="top">
-<strong>BONE EDITOR REAL - Mueve el cuerpo</strong>
+<strong>BONE COMPLETO - Con columna y cuello</strong>
 <input type="file" id="file" accept="image/*">
-<button class="ghost" id="autoBone" style="width:49%">Auto detectar 4 dir</button>
-<button class="ghost" id="btnReset" style="width:49%">Reset</button>
+<div style="display:flex;gap:6px;width:100%"><button class="ghost" id="autoBone" style="width:50%">Auto 4 dir</button><button class="ghost" id="btnReset" style="width:50%">Reset</button></div>
 </div>
-<div id="canvasBox"><canvas id="c" width="800" height="800"></canvas></div>
+<div id="canvasBox"><canvas id="c" width="900" height="900"></canvas></div>
 <div id="thumbs"></div>
 <div id="panel">
-<div id="status">1. Sube tu personaje_idle_strip4.png - 2. Arrastra punto rojo y el cuerpo se dobla</div>
-<label><input type="checkbox" id="showBones" checked> Mostrar huesos</label>
-<div style="display:flex;gap:6px"><button class="ghost" id="btnIdle" style="width:50%">T-Pose 4 dir</button><button class="ghost" id="btnCopy" style="width:50%">Copiar pose a todos</button></div>
+<div id="status">Sube tu personaje_idle_strip4.png - Ahora tiene columna, cuello y no se estira</div>
+<label><input type="checkbox" id="showBones" checked> Mostrar huesos completos</label>
+<div style="display:flex;gap:6px"><button class="ghost" id="btnIdle" style="width:50%">T-Pose 4 dir</button><button class="ghost" id="btnCopy" style="width:50%">Copiar a 4</button></div>
 <button class="primary" id="export">EXPORTAR 8192x2048 strip4.png</button>
 </div>
 <canvas id="exportC" width="8192" height="2048" style="display:none"></canvas>
@@ -46,17 +45,27 @@ function getBounds(canvas){
   const w=canvas.width,h=canvas.height;
   const d=canvas.getContext('2d').getImageData(0,0,w,h).data;
   let minX=w,minY=h,maxX=0,maxY=0,f=false;
-  for(let y=0;y<h;y+=3){for(let x=0;x<w;x+=3){let i=(y*w+x)*4; if(d[i+3]>15){if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; f=true;}}}
+  for(let y=0;y<h;y+=2){for(let x=0;x<w;x+=2){let i=(y*w+x)*4; if(d[i+3]>10){if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; f=true;}}}
   if(!f) return {x:0,y:0,w:w,h:h};
   return {x:minX,y:minY,w:maxX-minX,h:maxY-minY};
 }
-function skeletonForDir(b, dir){
-  const x=b.x, y=b.y, w=b.w, h=b.h;
+function createFullSkeleton(b, dir){
+  const x=b.x,y=b.y,w=b.w,h=b.h;
   const P=(rx,ry)=>({x:x+rx*w, y:y+ry*h});
-  if(dir===0) return {torso:P(0.5,0.50), head:P(0.5,0.12), l_sh:P(0.30,0.36), l_el:P(0.12,0.46), l_ha:P(0.02,0.52), r_sh:P(0.70,0.36), r_el:P(0.88,0.46), r_ha:P(0.98,0.52), l_hip:P(0.42,0.66), l_kn:P(0.36,0.84), l_ft:P(0.32,0.98), r_hip:P(0.58,0.66), r_kn:P(0.64,0.84), r_ft:P(0.68,0.98)};
-  if(dir===1) return {torso:P(0.52,0.50), head:P(0.53,0.12), l_sh:P(0.35,0.35), l_el:P(0.20,0.44), l_ha:P(0.10,0.50), r_sh:P(0.66,0.37), r_el:P(0.78,0.45), r_ha:P(0.86,0.51), l_hip:P(0.44,0.66), l_kn:P(0.38,0.84), l_ft:P(0.36,0.98), r_hip:P(0.58,0.67), r_kn:P(0.62,0.84), r_ft:P(0.64,0.98)};
-  if(dir===2) return {torso:P(0.50,0.50), head:P(0.52,0.12), l_sh:P(0.50,0.34), l_el:P(0.64,0.40), l_ha:P(0.78,0.42), r_sh:P(0.48,0.35), r_el:P(0.42,0.41), r_ha:P(0.36,0.43), l_hip:P(0.50,0.65), l_kn:P(0.54,0.82), l_ft:P(0.56,0.98), r_hip:P(0.48,0.65), r_kn:P(0.46,0.82), r_ft:P(0.44,0.98)};
-  return {torso:P(0.48,0.50), head:P(0.46,0.12), l_sh:P(0.38,0.34), l_el:P(0.26,0.40), l_ha:P(0.14,0.44), r_sh:P(0.54,0.35), r_el:P(0.60,0.41), r_ha:P(0.66,0.43), l_hip:P(0.44,0.65), l_kn:P(0.42,0.82), l_ft:P(0.40,0.98), r_hip:P(0.52,0.65), r_kn:P(0.54,0.82), r_ft:P(0.56,0.98)};
+  if(dir===0){
+    return {hips:P(0.50,0.62), spine:P(0.50,0.52), chest:P(0.50,0.42), neck:P(0.50,0.32), head:P(0.50,0.18), l_clav:P(0.40,0.40), l_sh:P(0.28,0.40), l_el:P(0.12,0.46), l_ha:P(0.02,0.52), r_clav:P(0.60,0.40), r_sh:P(0.72,0.40), r_el:P(0.88,0.46), r_ha:P(0.98,0.52), l_hip:P(0.44,0.65), l_kn:P(0.38,0.82), l_ft:P(0.34,0.98), r_hip:P(0.56,0.65), r_kn:P(0.62,0.82), r_ft:P(0.66,0.98), _len:{}};
+  }
+  if(dir===1){
+    return {hips:P(0.52,0.62), spine:P(0.52,0.52), chest:P(0.52,0.42), neck:P(0.53,0.32), head:P(0.54,0.18), l_clav:P(0.42,0.39), l_sh:P(0.32,0.39), l_el:P(0.18,0.45), l_ha:P(0.08,0.50), r_clav:P(0.62,0.41), r_sh:P(0.70,0.41), r_el:P(0.80,0.46), r_ha:P(0.88,0.51), l_hip:P(0.46,0.65), l_kn:P(0.40,0.82), l_ft:P(0.38,0.98), r_hip:P(0.58,0.66), r_kn:P(0.62,0.83), r_ft:P(0.64,0.98), _len:{}};
+  }
+  if(dir===2){
+    return {hips:P(0.50,0.62), spine:P(0.50,0.52), chest:P(0.50,0.42), neck:P(0.51,0.32), head:P(0.52,0.18), l_clav:P(0.50,0.38), l_sh:P(0.54,0.38), l_el:P(0.66,0.40), l_ha:P(0.78,0.42), r_clav:P(0.50,0.39), r_sh:P(0.46,0.39), r_el:P(0.38,0.41), r_ha:P(0.30,0.43), l_hip:P(0.50,0.65), l_kn:P(0.54,0.82), l_ft:P(0.56,0.98), r_hip:P(0.48,0.65), r_kn:P(0.46,0.82), r_ft:P(0.44,0.98), _len:{}};
+  }
+  return {hips:P(0.48,0.62), spine:P(0.48,0.52), chest:P(0.48,0.42), neck:P(0.47,0.32), head:P(0.46,0.18), l_clav:P(0.40,0.38), l_sh:P(0.30,0.38), l_el:P(0.20,0.41), l_ha:P(0.10,0.44), r_clav:P(0.56,0.39), r_sh:P(0.62,0.39), r_el:P(0.68,0.41), r_ha:P(0.74,0.43), l_hip:P(0.44,0.65), l_kn:P(0.42,0.82), l_ft:P(0.40,0.98), r_hip:P(0.52,0.65), r_kn:P(0.54,0.82), r_ft:P(0.56,0.98), _len:{}};
+}
+function computeLengths(sk){
+  function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+  sk._len={spine:dist(sk.hips,sk.spine), chest:dist(sk.spine,sk.chest), neck:dist(sk.chest,sk.neck), head:dist(sk.neck,sk.head), l_up:dist(sk.l_sh,sk.l_el), l_low:dist(sk.l_el,sk.l_ha), r_up:dist(sk.r_sh,sk.r_el), r_low:dist(sk.r_el,sk.r_ha), l_thigh:dist(sk.l_hip,sk.l_kn), l_shin:dist(sk.l_kn,sk.l_ft), r_thigh:dist(sk.r_hip,sk.r_kn), r_shin:dist(sk.r_kn,sk.r_ft)};
 }
 function slice(){
   const cols=4, fw=srcImg.width/cols, fh=srcImg.height;
@@ -66,9 +75,9 @@ function slice(){
     off.getContext('2d').drawImage(srcImg,i*fw,0,fw,fh,0,0,fw,fh);
     const b=getBounds(off);
     frames.push({canvas:off,b:b,w:fw,h:fh});
-    skeletons.push(skeletonForDir(b,i));
+    const sk=createFullSkeleton(b,i); computeLengths(sk); skeletons.push(sk);
   }
-  buildThumbs(); cur=0; draw(); log('4 dir detectadas - arrastra puntos rojos, el cuerpo se mueve');
+  buildThumbs(); cur=0; draw();
 }
 function buildThumbs(){
   const cont=document.getElementById('thumbs'); cont.innerHTML='';
@@ -82,23 +91,39 @@ function buildThumbs(){
     cont.appendChild(d);
   });
 }
-function getPos(e){const r=c.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)*(c.width/r.width), y:(t.clientY-r.top)*(c.height/r.height)};}
-function findJoint(x,y){
-  const sk=skeletons[cur]; let best=null, bestD=45;
-  for(let k in sk){let p=sk[k]; let sx=worldToScreen(p).x, sy=worldToScreen(p).y; let d=Math.hypot(x-sx,y-sy); if(d<bestD){bestD=d; best=k;}}
-  return best;
+function solveTwoBone(root, mid, end, target, len1, len2){
+  let dx=target.x-root.x, dy=target.y-root.y;
+  let d=Math.hypot(dx,dy);
+  let maxReach=len1+len2-1; let minReach=Math.abs(len1-len2)+1;
+  if(d>maxReach){d=maxReach; let a=Math.atan2(dy,dx); target.x=root.x+Math.cos(a)*d; target.y=root.y+Math.sin(a)*d;}
+  if(d<minReach) d=minReach;
+  let a=Math.atan2(dy,dx);
+  let cosAngle=(len1*len1 + d*d - len2*len2)/(2*len1*d);
+  cosAngle=Math.max(-1,Math.min(1,cosAngle));
+  let angle1=Math.acos(cosAngle);
+  mid.x=root.x + Math.cos(a+angle1)*len1;
+  mid.y=root.y + Math.sin(a+angle1)*len1;
+  end.x=root.x + Math.cos(a)*d;
+  end.y=root.y + Math.sin(a)*d;
 }
-let view={ox:0,oy:0,scale:1};
-function calcView(){
-  const f=frames[cur]; if(!f) return;
-  const scale=Math.min((c.width*0.85)/f.w, (c.height*0.85)/f.h);
-  const w=f.w*scale, h=f.h*scale;
-  view={ox:(c.width-w)/2, oy:(c.height-h)/2, scale,w,h,fw:f.w,fh:f.h};
-}
+let view={ox:0,oy:0,w:0,h:0};
+function calcView(){const f=frames[cur]; if(!f) return; const scale=Math.min((c.width*0.88)/f.w, (c.height*0.88)/f.h); const w=f.w*scale, h=f.h*scale; view={ox:(c.width-w)/2, oy:(c.height-h)/2, w,h, fw:f.w, fh:f.h};}
 function worldToScreen(p){return {x: view.ox + (p.x/frames[cur].w)*view.w, y: view.oy + (p.y/frames[cur].h)*view.h};}
 function screenToWorld(sx,sy){return {x: ((sx-view.ox)/view.w)*frames[cur].w, y: ((sy-view.oy)/view.h)*frames[cur].h};}
+function getPos(e){const r=c.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)*(c.width/r.width), y:(t.clientY-r.top)*(c.height/r.height)};}
+function findJoint(x,y){const sk=skeletons[cur]; let best=null, bestD=40; for(let k in sk){if(k==='_len') continue; let p=sk[k]; let s=worldToScreen(p); let d=Math.hypot(x-s.x,y-s.y); if(d<bestD){bestD=d; best=k;}} return best;}
 function startDrag(e){e.preventDefault(); calcView(); const p=getPos(e); const j=findJoint(p.x,p.y); if(j) drag=j;}
-function moveDrag(e){if(!drag) return; e.preventDefault(); const p=getPos(e); const w=screenToWorld(p.x,p.y); skeletons[cur][drag]=w; draw();}
+function moveDrag(e){
+  if(!drag) return; e.preventDefault();
+  const p=getPos(e); const w=screenToWorld(p.x,p.y);
+  const sk=skeletons[cur];
+  if(drag==='l_ha'){ solveTwoBone(sk.l_sh, sk.l_el, sk.l_ha, w, sk._len.l_up, sk._len.l_low); }
+  else if(drag==='r_ha'){ solveTwoBone(sk.r_sh, sk.r_el, sk.r_ha, w, sk._len.r_up, sk._len.r_low); }
+  else if(drag==='l_ft'){ solveTwoBone(sk.l_hip, sk.l_kn, sk.l_ft, w, sk._len.l_thigh, sk._len.l_shin); }
+  else if(drag==='r_ft'){ solveTwoBone(sk.r_hip, sk.r_kn, sk.r_ft, w, sk._len.r_thigh, sk._len.r_shin); }
+  else { sk[drag].x=w.x; sk[drag].y=w.y; }
+  draw();
+}
 function endDrag(){drag=null;}
 c.addEventListener('mousedown',startDrag); window.addEventListener('mousemove',moveDrag); window.addEventListener('mouseup',endDrag);
 c.addEventListener('touchstart',startDrag,{passive:false}); window.addEventListener('touchmove',moveDrag,{passive:false}); window.addEventListener('touchend',endDrag);
@@ -106,33 +131,40 @@ function draw(){
   if(!frames[cur]){ctx.clearRect(0,0,c.width,c.height); return;}
   calcView(); ctx.clearRect(0,0,c.width,c.height);
   const sk=skeletons[cur]; const f=frames[cur];
-  function drawSegment(a,b,thick,color){
+  function seg(a,b,thick,color){
     const A=worldToScreen(a), B=worldToScreen(b);
     const len=Math.hypot(B.x-A.x,B.y-A.y), ang=Math.atan2(B.y-A.y,B.x-A.x);
     ctx.save(); ctx.translate(A.x,A.y); ctx.rotate(ang);
     ctx.fillStyle=color; ctx.beginPath(); ctx.roundRect(0,-thick/2,len,thick,thick/2); ctx.fill(); ctx.restore();
   }
-  const white='#e9e9e9';
-  ctx.globalAlpha=0.18; ctx.drawImage(f.canvas,0,0,f.w,f.h,view.ox,view.oy,view.w,view.h); ctx.globalAlpha=1;
-  drawSegment(sk.torso, sk.head, view.w*0.18, white);
-  drawSegment(sk.torso, sk.l_sh, view.w*0.09, white);
-  drawSegment(sk.l_sh, sk.l_el, view.w*0.07, white);
-  drawSegment(sk.l_el, sk.l_ha, view.w*0.06, white);
-  drawSegment(sk.torso, sk.r_sh, view.w*0.09, white);
-  drawSegment(sk.r_sh, sk.r_el, view.w*0.07, white);
-  drawSegment(sk.r_el, sk.r_ha, view.w*0.06, white);
-  drawSegment(sk.torso, sk.l_hip, view.w*0.09, white);
-  drawSegment(sk.l_hip, sk.l_kn, view.w*0.08, white);
-  drawSegment(sk.l_kn, sk.l_ft, view.w*0.07, white);
-  drawSegment(sk.torso, sk.r_hip, view.w*0.09, white);
-  drawSegment(sk.r_hip, sk.r_kn, view.w*0.08, white);
-  drawSegment(sk.r_kn, sk.r_ft, view.w*0.07, white);
+  ctx.globalAlpha=0.20; ctx.drawImage(f.canvas,0,0,f.w,f.h,view.ox,view.oy,view.w,view.h); ctx.globalAlpha=1;
+  const boneCol='#e9e9e9'; const spineCol='#ffffff';
+  seg(sk.hips, sk.spine, view.w*0.10, spineCol);
+  seg(sk.spine, sk.chest, view.w*0.12, spineCol);
+  seg(sk.chest, sk.neck, view.w*0.08, '#ffdf8f');
+  seg(sk.neck, sk.head, view.w*0.14, boneCol);
+  seg(sk.chest, sk.l_clav, view.w*0.06, boneCol);
+  seg(sk.chest, sk.r_clav, view.w*0.06, boneCol);
+  seg(sk.l_clav, sk.l_sh, view.w*0.06, boneCol);
+  seg(sk.r_clav, sk.r_sh, view.w*0.06, boneCol);
+  seg(sk.l_sh, sk.l_el, view.w*0.07, boneCol);
+  seg(sk.l_el, sk.l_ha, view.w*0.06, boneCol);
+  seg(sk.r_sh, sk.r_el, view.w*0.07, boneCol);
+  seg(sk.r_el, sk.r_ha, view.w*0.06, boneCol);
+  seg(sk.hips, sk.l_hip, view.w*0.06, boneCol);
+  seg(sk.hips, sk.r_hip, view.w*0.06, boneCol);
+  seg(sk.l_hip, sk.l_kn, view.w*0.08, boneCol);
+  seg(sk.l_kn, sk.l_ft, view.w*0.07, boneCol);
+  seg(sk.r_hip, sk.r_kn, view.w*0.08, boneCol);
+  seg(sk.r_kn, sk.r_ft, view.w*0.07, boneCol);
   if(document.getElementById('showBones').checked){
-    for(let k in sk){
+    for(let k in sk){ if(k==='_len') continue;
       const p=worldToScreen(sk[k]);
       const isEnd=k.includes('ha')||k.includes('ft');
-      ctx.fillStyle=isEnd?'#ff5c7c':'#7c5cff'; ctx.strokeStyle='#fff'; ctx.lineWidth=2;
-      ctx.beginPath(); ctx.arc(p.x,p.y,isEnd?8:7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      const isSpine=k==='spine'||k==='chest'||k==='neck';
+      ctx.fillStyle=isEnd?'#ff5c7c':isSpine?'#ffcc00':'#7c5cff';
+      ctx.strokeStyle='#fff'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(p.x,p.y,isSpine?6:isEnd?8:7,0,Math.PI*2); ctx.fill(); ctx.stroke();
     }
   }
 }
@@ -141,13 +173,13 @@ document.getElementById('file').addEventListener('change',e=>{
   const url=URL.createObjectURL(file); srcImg=new Image();
   srcImg.onload=()=>{slice();}; srcImg.src=url;
 });
-document.getElementById('autoBone').onclick=()=>{if(!frames[cur]) return; skeletons[cur]=skeletonForDir(frames[cur].b,cur); draw();};
-document.getElementById('btnReset').onclick=()=>{if(!frames[cur]) return; skeletons[cur]=skeletonForDir(frames[cur].b,cur); draw();};
-document.getElementById('btnIdle').onclick=()=>{for(let i=0;i<4;i++) skeletons[i]=skeletonForDir(frames[i].b,i); cur=0; buildThumbs(); draw();};
+document.getElementById('autoBone').onclick=()=>{if(!frames[cur]) return; const sk=createFullSkeleton(frames[cur].b,cur); computeLengths(sk); skeletons[cur]=sk; draw();};
+document.getElementById('btnReset').onclick=()=>{if(!frames[cur]) return; const sk=createFullSkeleton(frames[cur].b,cur); computeLengths(sk); skeletons[cur]=sk; draw();};
+document.getElementById('btnIdle').onclick=()=>{for(let i=0;i<4;i++){const sk=createFullSkeleton(frames[i].b,i); computeLengths(sk); skeletons[i]=sk;} cur=0; buildThumbs(); draw();};
 document.getElementById('export').onclick=()=>{
   ectx.clearRect(0,0,8192,2048);
   frames.forEach((f,i)=>{ectx.drawImage(f.canvas,0,0,f.w,f.h,i*2048,0,2048,2048);});
-  const a=document.createElement('a'); a.download='personaje_deform_4dir_strip4.png'; a.href=exportC.toDataURL('image/png'); a.click();
+  const a=document.createElement('a'); a.download='personaje_fullspine_4dir_strip4.png'; a.href=exportC.toDataURL('image/png'); a.click();
 };
 draw();
 </script>
