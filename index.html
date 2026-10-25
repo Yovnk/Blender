@@ -3,49 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Editor FIX COMPLETO - PNG a Verde 4 Dir</title>
+<title>Editor RIGIDO - Cuello Fijo</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font-family:system-ui}
-#top{background:#111;padding:10px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #222}
+#top{background:#111;padding:8px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #222}
 input{width:100%;background:#1e1e1e;color:#fff;padding:8px;border-radius:6px;border:1px solid #333}
-button{padding:12px;border-radius:8px;border:0;font-weight:700;margin-top:6px;width:100%}
+button{padding:11px;border-radius:8px;border:0;font-weight:700;margin-top:5px;width:100%}
 .primary{background:#00ff88;color:#000}.secondary{background:#7c5cff;color:#fff}.ghost{background:#222;color:#fff}
-#canvasBox{width:100%;height:68vh;background:#000;display:flex;justify-content:center;align-items:center;touch-action:none}
+#canvasBox{width:100%;height:62vh;background:#000;display:flex;justify-content:center;align-items:center;touch-action:none}
 #c{max-width:100%;max-height:100%}
-#thumbs{display:flex;gap:6px;padding:8px;background:#111;overflow-x:auto}
-.th{width:80px;height:80px;border:2px solid #333;border-radius:10px;overflow:hidden;position:relative;background:#000;flex-shrink:0}
-.th.active{border-color:#00ff88}.th span{position:absolute;bottom:0;left:0;right:0;background:#000c;font-size:9px;text-align:center;padding:2px}
-#panel{padding:10px;background:#111}
-#status{background:#0a0a0a;padding:8px;border-radius:6px;font-size:12px;color:#00ff88;margin-bottom:6px;border:1px solid #1a1a1a}
-small{color:#aaa;font-size:11px}
+#thumbs{display:flex;gap:6px;padding:6px;background:#111;overflow-x:auto}
+.th{width:70px;height:70px;border:2px solid #333;border-radius:10px;overflow:hidden;position:relative;background:#000;flex-shrink:0}
+.th.active{border-color:#00ff88}.th span{position:absolute;bottom:0;left:0;right:0;background:#000c;font-size:8px;text-align:center;padding:2px}
+#panel{padding:8px;background:#111}
+#status{background:#0a0a0a;padding:6px;border-radius:6px;font-size:11px;color:#00ff88;margin-bottom:5px;border:1px solid #1a1a1a}
 </style>
 </head>
 <body>
 <div id="top">
-<strong>FIX COMPLETO: PNG Transparente -> Sprites Verdes</strong>
+<strong>RIGIDO: Cuello Fijo + Humano No Deformable</strong>
 <input type="file" id="file" accept="image/*">
-<div style="display:flex;gap:6px;width:100%"><button class="ghost" id="autoBone" style="width:50%">Auto calzar blanco</button><button class="ghost" id="btnReset" style="width:50%">Reset T-Pose</button></div>
+<div style="display:flex;gap:6px;width:100%"><button class="ghost" id="autoBone" style="width:50%">Auto calzar</button><button class="ghost" id="btnReset" style="width:50%">Reset T-Pose RIGIDO</button></div>
 </div>
 <div id="canvasBox"><canvas id="c" width="1024" height="1024"></canvas></div>
 <div id="thumbs"></div>
 <div id="panel">
-<div id="status">Sube tu Foto 1 PNG (T-Pose) - Detecta blanco por brillo, sirve para PNG transparente y JPG negro de WhatsApp</div>
-<label><input type="checkbox" id="showBones" checked> Mostrar esqueleto</label>
-<label><input type="checkbox" id="showFloor" checked> Mostrar piso 45° verde</label>
-<label><input type="checkbox" id="showSprite" checked> Mostrar sprite original (0.2)</label>
-<div style="display:flex;gap:6px">
+<div id="status">FIX cuello fijo: columna+pecho+cuello es un bloque rigido</div>
+<label><input type="checkbox" id="showBones" checked> Esqueleto</label>
+<label><input type="checkbox" id="showFloor" checked> Piso 45°</label>
+<label><input type="checkbox" id="showSprite" checked> Sprite base 0.15</label>
+<div style="display:flex;gap:5px">
 <button class="ghost" id="btnIdle" style="width:33%">T-Pose</button>
-<button class="ghost" id="btnIdlePose" style="width:33%">Pose IDLE</button>
-<button class="ghost" id="btnWalkPose" style="width:33%">Pose WALK</button>
+<button class="ghost" id="btnIdlePose" style="width:33%">IDLE</button>
+<button class="ghost" id="btnWalkPose" style="width:33%">WALK</button>
 </div>
-<button class="ghost" id="btnFightPose">Pose PELEA (Foto 3)</button>
-<div style="display:flex;gap:6px">
+<button class="ghost" id="btnFightPose">PELEA</button>
+<div style="display:flex;gap:5px">
 <button class="ghost" id="btnCopy" style="width:50%">Copiar pose a 4 dirs</button>
-<button class="ghost" id="btnMirror" style="width:50%">Auto 45°/90°/135°</button>
+<button class="ghost" id="btnLock" style="width:50%">Bloquear torso</button>
 </div>
-<button class="primary" id="exportGreen">EXPORTAR STRIP VERDE 4 DIR (como Fotos 2-5)</button>
+<button class="primary" id="exportGreen">EXPORTAR VERDE 2048x512</button>
 <button class="secondary" id="export">EXPORTAR ORIGINAL 8192x2048</button>
-<small>Con 1 Foto T-Pose generas IDLE/WALK/PELEA. FIX detecta blanco por brillo + alpha, no falla con PNG ni JPG negro.</small>
 </div>
 <canvas id="exportC" width="8192" height="2048" style="display:none"></canvas>
 <canvas id="greenC" width="2048" height="512" style="display:none"></canvas>
@@ -57,218 +55,150 @@ const exportC=document.getElementById('exportC'), ectx=exportC.getContext('2d');
 const greenC=document.getElementById('greenC'), gctx=greenC.getContext('2d');
 const statusEl=document.getElementById('status');
 function log(m){statusEl.textContent=m;}
-
 function getBounds(canvas){
   const w=canvas.width,h=canvas.height;
-  const ctx2=canvas.getContext('2d');
-  const d=ctx2.getImageData(0,0,w,h).data;
+  const d=canvas.getContext('2d').getImageData(0,0,w,h).data;
   let minX=w,minY=h,maxX=0,maxY=0,f=false;
-  for(let y=0;y<h;y+=4){
-    for(let x=0;x<w;x+=4){
-      let i=(y*w+x)*4;
-      let r=d[i], g=d[i+1], b=d[i+2], a=d[i+3];
-      let brightness=r+g+b;
-      let isWhite = a>20 && brightness>200 && r>80 && g>80 && b>80;
-      if(isWhite){
-        if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; f=true;
-      }
-    }
-  }
-  if(!f) return {x:w*0.28,y:h*0.12,w:w*0.44,h:h*0.82};
-  let padX=(maxX-minX)*0.08, padY=(maxY-minY)*0.05;
-  minX=Math.max(0,minX-padX); minY=Math.max(0,minY-padY);
-  maxX=Math.min(w,maxX+padX); maxY=Math.min(h,maxY+padY);
-  return {x:minX,y:minY,w:maxX-minX,h:maxY-minY};
+  for(let y=0;y<h;y+=3){for(let x=0;x<w;x+=3){let i=(y*w+x)*4; let r=d[i], g=d[i+1], b=d[i+2], a=d[i+3]; let br=r+g+b; if(a>20 && br>180){if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; f=true;}}}
+  if(!f) return {x:w*0.30,y:h*0.10,w:w*0.40,h:h*0.80};
+  let pad=(maxX-minX)*0.06;
+  return {x:Math.max(0,minX-pad), y:Math.max(0,minY-pad), w:Math.min(w,maxX+pad)-Math.max(0,minX-pad), h:Math.min(h,maxY+pad)-Math.max(0,minY-pad)};
 }
-
-function createAccurateSkeleton(b, dir){
+function createRigidSkeleton(b, dir){
   const x=b.x,y=b.y,w=b.w,h=b.h;
   const P=(rx,ry)=>({x:x+rx*w, y:y+ry*h});
-  if(dir===0) return {hips:P(0.50,0.63), spine:P(0.50,0.51), chest:P(0.50,0.39), neck:P(0.50,0.30), head:P(0.50,0.15), l_clav:P(0.41,0.38), l_sh:P(0.26,0.38), l_el:P(0.11,0.40), l_ha:P(0.02,0.42), r_clav:P(0.59,0.38), r_sh:P(0.74,0.38), r_el:P(0.89,0.40), r_ha:P(0.98,0.42), l_hip:P(0.44,0.65), l_kn:P(0.38,0.82), l_ft:P(0.33,0.97), r_hip:P(0.56,0.65), r_kn:P(0.62,0.82), r_ft:P(0.67,0.97), _len:{}};
-  if(dir===1) return {hips:P(0.50,0.63), spine:P(0.50,0.51), chest:P(0.50,0.39), neck:P(0.51,0.30), head:P(0.52,0.15), l_clav:P(0.42,0.37), l_sh:P(0.30,0.37), l_el:P(0.17,0.39), l_ha:P(0.08,0.41), r_clav:P(0.60,0.38), r_sh:P(0.70,0.38), r_el:P(0.81,0.40), r_ha:P(0.90,0.42), l_hip:P(0.45,0.65), l_kn:P(0.40,0.82), l_ft:P(0.37,0.97), r_hip:P(0.55,0.65), r_kn:P(0.60,0.82), r_ft:P(0.63,0.97), _len:{}};
-  if(dir===2) return {hips:P(0.50,0.63), spine:P(0.50,0.51), chest:P(0.50,0.39), neck:P(0.52,0.30), head:P(0.54,0.15), l_clav:P(0.50,0.36), l_sh:P(0.56,0.36), l_el:P(0.67,0.37), l_ha:P(0.77,0.38), r_clav:P(0.50,0.37), r_sh:P(0.47,0.37), r_el:P(0.39,0.38), r_ha:P(0.31,0.39), l_hip:P(0.50,0.65), l_kn:P(0.54,0.82), l_ft:P(0.56,0.97), r_hip:P(0.48,0.65), r_kn:P(0.46,0.82), r_ft:P(0.44,0.97), _len:{}};
-  return {hips:P(0.50,0.63), spine:P(0.50,0.51), chest:P(0.50,0.39), neck:P(0.49,0.30), head:P(0.48,0.15), l_clav:P(0.41,0.36), l_sh:P(0.32,0.36), l_el:P(0.20,0.38), l_ha:P(0.11,0.40), r_clav:P(0.59,0.37), r_sh:P(0.66,0.37), r_el:P(0.74,0.38), r_ha:P(0.82,0.39), l_hip:P(0.45,0.65), l_kn:P(0.43,0.82), l_ft:P(0.41,0.97), r_hip:P(0.55,0.65), r_kn:P(0.57,0.82), r_ft:P(0.59,0.97), _len:{}};
+  let sk;
+  if(dir===0) sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.50,0.30), head:P(0.50,0.15), l_sh:P(0.28,0.39), l_el:P(0.12,0.41), l_ha:P(0.03,0.43), r_sh:P(0.72,0.39), r_el:P(0.88,0.41), r_ha:P(0.97,0.43), l_hip:P(0.44,0.64), l_kn:P(0.39,0.81), l_ft:P(0.35,0.96), r_hip:P(0.56,0.64), r_kn:P(0.61,0.81), r_ft:P(0.65,0.96)};
+  else if(dir===1) sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.51,0.30), head:P(0.52,0.15), l_sh:P(0.32,0.38), l_el:P(0.18,0.40), l_ha:P(0.09,0.42), r_sh:P(0.70,0.39), r_el:P(0.82,0.41), r_ha:P(0.91,0.43), l_hip:P(0.45,0.64), l_kn:P(0.41,0.81), l_ft:P(0.38,0.96), r_hip:P(0.55,0.64), r_kn:P(0.60,0.81), r_ft:P(0.63,0.96)};
+  else if(dir===2) sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.52,0.30), head:P(0.54,0.15), l_sh:P(0.54,0.38), l_el:P(0.66,0.39), l_ha:P(0.76,0.40), r_sh:P(0.48,0.38), r_el:P(0.40,0.39), r_ha:P(0.32,0.40), l_hip:P(0.50,0.64), l_kn:P(0.54,0.81), l_ft:P(0.56,0.96), r_hip:P(0.48,0.64), r_kn:P(0.46,0.81), r_ft:P(0.44,0.96)};
+  else sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.49,0.30), head:P(0.48,0.15), l_sh:P(0.34,0.38), l_el:P(0.22,0.40), l_ha:P(0.12,0.42), r_sh:P(0.66,0.39), r_el:P(0.74,0.40), r_ha:P(0.82,0.41), l_hip:P(0.45,0.64), l_kn:P(0.43,0.81), l_ft:P(0.41,0.96), r_hip:P(0.55,0.64), r_kn:P(0.57,0.81), r_ft:P(0.59,0.96)};
+  function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+  sk._fixed={hips_spine:dist(sk.hips,sk.spine), spine_chest:dist(sk.spine,sk.chest), chest_neck:dist(sk.chest,sk.neck), neck_head:dist(sk.neck,sk.head), l_up:dist(sk.l_sh,sk.l_el), l_low:dist(sk.l_el,sk.l_ha), r_up:dist(sk.r_sh,sk.r_el), r_low:dist(sk.r_el,sk.r_ha), l_thigh:dist(sk.l_hip,sk.l_kn), l_shin:dist(sk.l_kn,sk.l_ft), r_thigh:dist(sk.r_hip,sk.r_kn), r_shin:dist(sk.r_kn,sk.r_ft)};
+  return sk;
 }
-function computeLengths(sk){function d(a,b){return Math.hypot(a.x-b.x,a.y-b.y);} sk._len={l_up:d(sk.l_sh,sk.l_el), l_low:d(sk.l_el,sk.l_ha), r_up:d(sk.r_sh,sk.r_el), r_low:d(sk.r_el,sk.r_ha), l_thigh:d(sk.l_hip,sk.l_kn), l_shin:d(sk.l_kn,sk.l_ft), r_thigh:d(sk.r_hip,sk.r_kn), r_shin:d(sk.r_kn,sk.r_ft)};}
 function slice(){
   const cols=4, fw=srcImg.width/cols, fh=srcImg.height;
   frames=[]; skeletons=[];
-  for(let i=0;i<cols;i++){
-    const off=document.createElement('canvas'); off.width=fw; off.height=fh;
-    off.getContext('2d').drawImage(srcImg,i*fw,0,fw,fh,0,0,fw,fh);
-    const b=getBounds(off);
-    frames.push({canvas:off,b:b,w:fw,h:fh});
-    const sk=createAccurateSkeleton(b,i); computeLengths(sk); skeletons.push(sk);
-  }
-  buildThumbs(); cur=0; draw(); log('FIX OK: Detectado por brillo+alpha - calzado al blanco');
+  for(let i=0;i<cols;i++){const off=document.createElement('canvas'); off.width=fw; off.height=fh; off.getContext('2d').drawImage(srcImg,i*fw,0,fw,fh,0,0,fw,fh); const b=getBounds(off); frames.push({canvas:off,b:b,w:fw,h:fh}); skeletons.push(createRigidSkeleton(b,i));}
+  buildThumbs(); cur=0; draw(); log('RIGIDO OK: Cuello fijo');
 }
-function buildThumbs(){
-  const cont=document.getElementById('thumbs'); cont.innerHTML='';
-  frames.forEach((f,i)=>{
-    const d=document.createElement('div'); d.className='th'+(i===cur?' active':'');
-    const mini=document.createElement('canvas'); mini.width=80; mini.height=80;
-    mini.getContext('2d').drawImage(f.canvas,0,0,f.w,f.h,10,10,60,60);
-    d.appendChild(mini);
-    const sp=document.createElement('span'); sp.textContent=DIRS[i]; d.appendChild(sp);
-    d.onclick=()=>{cur=i; buildThumbs(); draw();};
-    cont.appendChild(d);
-  });
-}
-function solveTwoBone(root, mid, end, target, len1, len2){
-  let dx=target.x-root.x, dy=target.y-root.y; let d=Math.hypot(dx,dy);
-  let maxReach=len1+len2-0.5; let minReach=Math.abs(len1-len2)+0.5;
-  if(d>maxReach){d=maxReach; let a=Math.atan2(dy,dx); target.x=root.x+Math.cos(a)*d; target.y=root.y+Math.sin(a)*d;}
-  if(d<minReach) d=minReach;
-  let a=Math.atan2(dy,dx);
-  let cosAngle=(len1*len1 + d*d - len2*len2)/(2*len1*d);
-  cosAngle=Math.max(-1,Math.min(1,cosAngle));
-  let angle1=Math.acos(cosAngle);
-  mid.x=root.x + Math.cos(a+angle1)*len1; mid.y=root.y + Math.sin(a+angle1)*len1;
-  end.x=root.x + Math.cos(a)*d; end.y=root.y + Math.sin(a)*d;
+function buildThumbs(){const cont=document.getElementById('thumbs'); cont.innerHTML=''; frames.forEach((f,i)=>{const d=document.createElement('div'); d.className='th'+(i===cur?' active':''); const mini=document.createElement('canvas'); mini.width=70; mini.height=70; mini.getContext('2d').drawImage(f.canvas,0,0,f.w,f.h,5,5,60,60); d.appendChild(mini); const sp=document.createElement('span'); sp.textContent=DIRS[i]; d.appendChild(sp); d.onclick=()=>{cur=i; buildThumbs(); draw();}; cont.appendChild(d);});}
+function solveLimb(shoulder, elbow, hand, target, lenUp, lenLow){
+  let dx=target.x-shoulder.x, dy=target.y-shoulder.y; let d=Math.hypot(dx,dy); let maxD=lenUp+lenLow-1, minD=Math.abs(lenUp-lenLow)+1;
+  if(d>maxD){d=maxD; let a=Math.atan2(dy,dx); target.x=shoulder.x+Math.cos(a)*d; target.y=shoulder.y+Math.sin(a)*d;}
+  if(d<minD)d=minD;
+  let a=Math.atan2(dy,dx); let cosA=(lenUp*lenUp + d*d - lenLow*lenLow)/(2*lenUp*d); cosA=Math.max(-1,Math.min(1,cosA)); let ang=Math.acos(cosA);
+  elbow.x=shoulder.x + Math.cos(a+ang)*lenUp; elbow.y=shoulder.y + Math.sin(a+ang)*lenUp; hand.x=shoulder.x + Math.cos(a)*d; hand.y=shoulder.y + Math.sin(a)*d;
 }
 let view={ox:0,oy:0,w:0,h:0};
-function calcView(){const f=frames[cur]; if(!f) return; const scale=Math.min((c.width*0.70)/f.w, (c.height*0.68)/f.h); const w=f.w*scale, h=f.h*scale; view={ox:(c.width-w)/2, oy:(c.height-h)/2 - c.height*0.05, w,h};}
+function calcView(){const f=frames[cur]; if(!f) return; const s=Math.min((c.width*0.68)/f.w, (c.height*0.62)/f.h); const w=f.w*s, h=f.h*s; view={ox:(c.width-w)/2, oy:(c.height-h)/2 - c.height*0.06, w,h};}
 function worldToScreen(p){return {x: view.ox + (p.x/frames[cur].w)*view.w, y: view.oy + (p.y/frames[cur].h)*view.h};}
 function screenToWorld(sx,sy){return {x: ((sx-view.ox)/view.w)*frames[cur].w, y: ((sy-view.oy)/view.h)*frames[cur].h};}
 function getPos(e){const r=c.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)*(c.width/r.width), y:(t.clientY-r.top)*(c.height/r.height)};}
-function findJoint(x,y){const sk=skeletons[cur]; let best=null, bestD=42; for(let k in sk){if(k==='_len') continue; let p=sk[k]; let s=worldToScreen(p); let d=Math.hypot(x-s.x,y-s.y); if(d<bestD){bestD=d; best=k;}} return best;}
+function findJoint(x,y){const sk=skeletons[cur]; let best=null, bestD=40; for(let k in sk){if(k.startsWith('_')) continue; let p=sk[k]; let s=worldToScreen(p); let d=Math.hypot(x-s.x,y-s.y); if(d<bestD){bestD=d; best=k;}} return best;}
 function startDrag(e){e.preventDefault(); calcView(); const p=getPos(e); const j=findJoint(p.x,p.y); if(j) drag=j;}
-function moveDrag(e){if(!drag) return; e.preventDefault(); const p=getPos(e); const w=screenToWorld(p.x,p.y); const sk=skeletons[cur]; if(drag==='l_ha'){solveTwoBone(sk.l_sh, sk.l_el, sk.l_ha, w, sk._len.l_up, sk._len.l_low);} else if(drag==='r_ha'){solveTwoBone(sk.r_sh, sk.r_el, sk.r_ha, w, sk._len.r_up, sk._len.r_low);} else if(drag==='l_ft'){solveTwoBone(sk.l_hip, sk.l_kn, sk.l_ft, w, sk._len.l_thigh, sk._len.l_shin);} else if(drag==='r_ft'){solveTwoBone(sk.r_hip, sk.r_kn, sk.r_ft, w, sk._len.r_thigh, sk._len.r_shin);} else {sk[drag].x=w.x; sk[drag].y=w.y;} draw();}
+function moveDrag(e){
+  if(!drag) return; e.preventDefault();
+  const p=getPos(e); const w=screenToWorld(p.x,p.y);
+  const sk=skeletons[cur]; const fix=sk._fixed;
+  if(['hips','spine','chest','neck'].includes(drag)){
+    let dx=w.x - sk[drag].x, dy=w.y - sk[drag].y;
+    ['hips','spine','chest','neck','head','l_sh','r_sh','l_hip','r_hip'].forEach(k=>{if(sk[k]){sk[k].x+=dx; sk[k].y+=dy;}});
+    let dir=Math.atan2(sk.neck.y-sk.chest.y, sk.neck.x-sk.chest.x);
+    sk.neck.x=sk.chest.x + Math.cos(dir)*fix.chest_neck; sk.neck.y=sk.chest.y + Math.sin(dir)*fix.chest_neck;
+    let dir2=Math.atan2(sk.head.y-sk.neck.y, sk.head.x-sk.neck.x);
+    sk.head.x=sk.neck.x + Math.cos(dir2)*fix.neck_head; sk.head.y=sk.neck.y + Math.sin(dir2)*fix.neck_head;
+  } else if(drag==='head'){
+    let a=Math.atan2(w.y-sk.neck.y, w.x-sk.neck.x);
+    sk.head.x=sk.neck.x + Math.cos(a)*fix.neck_head; sk.head.y=sk.neck.y + Math.sin(a)*fix.neck_head;
+  } else if(drag==='l_ha'){solveLimb(sk.l_sh, sk.l_el, sk.l_ha, w, fix.l_up, fix.l_low);}
+  else if(drag==='r_ha'){solveLimb(sk.r_sh, sk.r_el, sk.r_ha, w, fix.r_up, fix.r_low);}
+  else if(drag==='l_ft'){solveLimb(sk.l_hip, sk.l_kn, sk.l_ft, w, fix.l_thigh, fix.l_shin);}
+  else if(drag==='r_ft'){solveLimb(sk.r_hip, sk.r_kn, sk.r_ft, w, fix.r_thigh, fix.r_shin);}
+  else if(['l_el','r_el','l_kn','r_kn'].includes(drag)){
+    let parent=drag==='l_el'?sk.l_sh : drag==='r_el'?sk.r_sh : drag==='l_kn'?sk.l_hip : sk.r_hip;
+    let len=drag==='l_el'?fix.l_up : drag==='r_el'?fix.r_up : drag==='l_kn'?fix.l_thigh : fix.r_thigh;
+    let a=Math.atan2(w.y-parent.y, w.x-parent.x);
+    sk[drag].x=parent.x + Math.cos(a)*len; sk[drag].y=parent.y + Math.sin(a)*len;
+  }
+  draw();
+}
 function endDrag(){drag=null;}
 c.addEventListener('mousedown',startDrag); window.addEventListener('mousemove',moveDrag); window.addEventListener('mouseup',endDrag);
 c.addEventListener('touchstart',startDrag,{passive:false}); window.addEventListener('touchmove',moveDrag,{passive:false}); window.addEventListener('touchend',endDrag);
 function drawFloor(){
-  const W=c.width, H=c.height; const vanishX=W*0.5, vanishY=H*0.08; const floorY=H*0.72;
-  ctx.save(); ctx.strokeStyle='#00ff55'; ctx.lineWidth=1; ctx.globalAlpha=0.9;
-  for(let i=-20;i<=20;i++){let x=W*0.5 + i*(W*0.04); ctx.beginPath(); ctx.moveTo(x, H); ctx.lineTo(vanishX + i*1.5, vanishY); ctx.stroke();}
-  for(let j=0;j<28;j++){let t=j/28; let y=floorY + Math.pow(t,1.8)*(H-floorY); let left=W*0.5 + (-20*(W*0.04))*(1-(y-vanishY)/(H-vanishY)*0.9); let right=W*0.5 + (20*(W*0.04))*(1-(y-vanishY)/(H-vanishY)*0.9); ctx.globalAlpha=0.15 + t*0.5; ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();}
-  ctx.globalAlpha=1; ctx.fillStyle='#ff3333'; ctx.font='bold 14px monospace';
-  ctx.fillText('0°', vanishX-12, vanishY+18); ctx.fillText('315°', W*0.12, vanishY+20); ctx.fillText('45°', W*0.80, vanishY+20);
-  ctx.fillText('270°', W*0.10, H*0.68); ctx.fillText('90°', W*0.84, H*0.68);
-  ctx.fillText('225°', W*0.18, H*0.88); ctx.fillText('180°', W*0.46, H*0.92); ctx.fillText('135°', W*0.72, H*0.88);
-  ctx.strokeStyle='#00ff00'; ctx.lineWidth=2; ctx.globalAlpha=0.8; ctx.strokeRect(W*0.05, vanishY-10, W*0.90, H*0.85); ctx.restore();
+  const W=c.width, H=c.height; const vx=W*0.5, vy=H*0.08, fy=H*0.70;
+  ctx.save(); ctx.strokeStyle='#00ff55'; ctx.lineWidth=1; ctx.globalAlpha=0.85;
+  for(let i=-20;i<=20;i++){let x=W*0.5 + i*(W*0.04); ctx.beginPath(); ctx.moveTo(x,H); ctx.lineTo(vx+i*1.2,vy); ctx.stroke();}
+  for(let j=0;j<26;j++){let t=j/26; let y=fy+Math.pow(t,1.7)*(H-fy); let l=W*0.5 + (-20*W*0.04)*(1-(y-vy)/(H-vy)*0.88); let r=W*0.5 + (20*W*0.04)*(1-(y-vy)/(H-vy)*0.88); ctx.globalAlpha=0.15+t*0.45; ctx.beginPath(); ctx.moveTo(l,y); ctx.lineTo(r,y); ctx.stroke();}
+  ctx.globalAlpha=1; ctx.fillStyle='#ff3333'; ctx.font='bold 13px monospace'; ctx.fillText('0°', vx-10, vy+16);
+  ctx.strokeStyle='#00ff00'; ctx.lineWidth=2; ctx.globalAlpha=0.75; ctx.strokeRect(W*0.06, vy-8, W*0.88, H*0.80); ctx.restore();
 }
 function draw(){
   if(!frames[cur]){ctx.fillStyle='#000'; ctx.fillRect(0,0,c.width,c.height); if(document.getElementById('showFloor').checked) drawFloor(); return;}
   calcView(); ctx.fillStyle='#000'; ctx.fillRect(0,0,c.width,c.height);
   if(document.getElementById('showFloor').checked) drawFloor();
   const sk=skeletons[cur]; const f=frames[cur];
-  function seg(a,b,thick,color){
-    const A=worldToScreen(a), B=worldToScreen(b);
-    const len=Math.hypot(B.x-A.x,B.y-A.y), ang=Math.atan2(B.y-A.y,B.x-A.x);
-    ctx.save(); ctx.translate(A.x,A.y); ctx.rotate(ang);
-    ctx.fillStyle=color; ctx.beginPath(); ctx.roundRect(0,-thick/2,len,thick,thick/2); ctx.fill(); ctx.restore();
-  }
-  if(document.getElementById('showSprite').checked){ctx.globalAlpha=0.22; ctx.drawImage(f.canvas,0,0,f.w,f.h,view.ox,view.oy,view.w,view.h); ctx.globalAlpha=1;}
-  const bw='#f0f0f0'; const sw='#ffffff';
-  seg(sk.hips, sk.spine, view.w*0.09, sw); seg(sk.spine, sk.chest, view.w*0.11, sw);
-  seg(sk.chest, sk.neck, view.w*0.07, '#ffec8a'); seg(sk.neck, sk.head, view.w*0.13, bw);
-  seg(sk.chest, sk.l_clav, view.w*0.05, bw); seg(sk.chest, sk.r_clav, view.w*0.05, bw);
-  seg(sk.l_clav, sk.l_sh, view.w*0.05, bw); seg(sk.r_clav, sk.r_sh, view.w*0.05, bw);
-  seg(sk.l_sh, sk.l_el, view.w*0.065, bw); seg(sk.l_el, sk.l_ha, view.w*0.055, bw);
-  seg(sk.r_sh, sk.r_el, view.w*0.065, bw); seg(sk.r_el, sk.r_ha, view.w*0.055, bw);
-  seg(sk.hips, sk.l_hip, view.w*0.05, bw); seg(sk.hips, sk.r_hip, view.w*0.05, bw);
-  seg(sk.l_hip, sk.l_kn, view.w*0.075, bw); seg(sk.l_kn, sk.l_ft, view.w*0.065, bw);
-  seg(sk.r_hip, sk.r_kn, view.w*0.075, bw); seg(sk.r_kn, sk.r_ft, view.w*0.065, bw);
+  function seg(a,b,thick,color){const A=worldToScreen(a), B=worldToScreen(b); const len=Math.hypot(B.x-A.x,B.y-A.y), ang=Math.atan2(B.y-A.y,B.x-A.x); ctx.save(); ctx.translate(A.x,A.y); ctx.rotate(ang); ctx.fillStyle=color; ctx.beginPath(); ctx.roundRect(0,-thick/2,len,thick,thick/2); ctx.fill(); ctx.restore();}
+  if(document.getElementById('showSprite').checked){ctx.globalAlpha=0.15; ctx.drawImage(f.canvas,0,0,f.w,f.h,view.ox,view.oy,view.w,view.h); ctx.globalAlpha=1;}
+  const white='#e8e8e8', spineCol='#ffffff', neckCol='#ffeb7a';
+  seg(sk.hips, sk.spine, view.w*0.085, spineCol); seg(sk.spine, sk.chest, view.w*0.10, spineCol); seg(sk.chest, sk.neck, view.w*0.065, neckCol); seg(sk.neck, sk.head, view.w*0.11, white);
+  seg(sk.l_sh, sk.l_el, view.w*0.060, white); seg(sk.l_el, sk.l_ha, view.w*0.050, white);
+  seg(sk.r_sh, sk.r_el, view.w*0.060, white); seg(sk.r_el, sk.r_ha, view.w*0.050, white);
+  seg(sk.l_hip, sk.l_kn, view.w*0.070, white); seg(sk.l_kn, sk.l_ft, view.w*0.060, white);
+  seg(sk.r_hip, sk.r_kn, view.w*0.070, white); seg(sk.r_kn, sk.r_ft, view.w*0.060, white);
+  seg(sk.chest, sk.l_sh, view.w*0.04, white); seg(sk.chest, sk.r_sh, view.w*0.04, white);
+  seg(sk.hips, sk.l_hip, view.w*0.04, white); seg(sk.hips, sk.r_hip, view.w*0.04, white);
   if(document.getElementById('showBones').checked){
-    for(let k in sk){ if(k==='_len') continue;
+    for(let k in sk){ if(k.startsWith('_')) continue;
       const p=worldToScreen(sk[k]);
-      ctx.fillStyle=k.includes('ha')||k.includes('ft')?'#ff5c7c':k==='spine'||k==='chest'||k==='neck'||k==='hips'?'#00ffcc':'#6cf2ff';
-      ctx.strokeStyle='#ffffff'; ctx.lineWidth=2;
-      ctx.beginPath(); ctx.arc(p.x,p.y,6,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle=k.includes('ha')||k.includes('ft')?'#ff4a6a':['hips','spine','chest','neck'].includes(k)?'#00ffcc':'#6cf2ff';
+      ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fill(); ctx.stroke();
     }
   }
 }
 function applyPreset(type){
   if(!frames[cur]) return;
-  const sk=skeletons[cur]; const b=frames[cur].b;
+  const sk=skeletons[cur]; const b=frames[cur].b; const fix=sk._fixed;
   if(type==='idle'){
-    sk.l_sh.x=b.x+b.w*0.32; sk.l_el.x=b.x+b.w*0.29; sk.l_el.y=b.y+b.h*0.56; sk.l_ha.x=b.x+b.w*0.28; sk.l_ha.y=b.y+b.h*0.68;
-    sk.r_sh.x=b.x+b.w*0.68; sk.r_el.x=b.x+b.w*0.71; sk.r_el.y=b.y+b.h*0.56; sk.r_ha.x=b.x+b.w*0.72; sk.r_ha.y=b.y+b.h*0.68;
+    sk.l_sh.x=b.x+b.w*0.32; sk.l_el.x=b.x+b.w*0.29; sk.l_el.y=b.y+b.h*0.55; sk.l_ha.x=b.x+b.w*0.28; sk.l_ha.y=b.y+b.h*0.66;
+    sk.r_sh.x=b.x+b.w*0.68; sk.r_el.x=b.x+b.w*0.71; sk.r_el.y=b.y+b.h*0.55; sk.r_ha.x=b.x+b.w*0.72; sk.r_ha.y=b.y+b.h*0.66;
   } else if(type==='walk'){
-    sk.l_el.x=b.x+b.w*0.24; sk.l_el.y=b.y+b.h*0.52; sk.l_ha.x=b.x+b.w*0.20; sk.l_ha.y=b.y+b.h*0.60;
-    sk.r_el.x=b.x+b.w*0.76; sk.r_el.y=b.y+b.h*0.50; sk.r_ha.x=b.x+b.w*0.80; sk.r_ha.y=b.y+b.h*0.58;
-    sk.l_kn.x=b.x+b.w*0.30; sk.l_kn.y=b.y+b.h*0.80; sk.l_ft.x=b.x+b.w*0.18; sk.l_ft.y=b.y+b.h*0.94;
-    sk.r_kn.x=b.x+b.w*0.70; sk.r_kn.y=b.y+b.h*0.84; sk.r_ft.x=b.x+b.w*0.82; sk.r_ft.y=b.y+b.h*0.96;
+    sk.l_kn.x=b.x+b.w*0.32; sk.l_kn.y=b.y+b.h*0.78; sk.l_ft.x=b.x+b.w*0.22; sk.l_ft.y=b.y+b.h*0.94;
+    sk.r_kn.x=b.x+b.w*0.68; sk.r_kn.y=b.y+b.h*0.82; sk.r_ft.x=b.x+b.w*0.78; sk.r_ft.y=b.y+b.h*0.95;
   } else if(type==='fight'){
-    sk.l_el.x=b.x+b.w*0.26; sk.l_el.y=b.y+b.h*0.48; sk.l_ha.x=b.x+b.w*0.28; sk.l_ha.y=b.y+b.h*0.54;
-    sk.r_el.x=b.x+b.w*0.72; sk.r_el.y=b.y+b.h*0.50; sk.r_ha.x=b.x+b.w*0.64; sk.r_ha.y=b.y+b.h*0.56;
-    sk.l_kn.x=b.x+b.w*0.32; sk.l_kn.y=b.y+b.h*0.78; sk.l_ft.x=b.x+b.w*0.24; sk.l_ft.y=b.y+b.h*0.95;
-    sk.r_kn.x=b.x+b.w*0.68; sk.r_kn.y=b.y+b.h*0.82; sk.r_ft.x=b.x+b.w*0.78; sk.r_ft.y=b.y+b.h*0.96;
+    sk.l_el.x=b.x+b.w*0.26; sk.l_el.y=b.y+b.h*0.47; sk.l_ha.x=b.x+b.w*0.28; sk.l_ha.y=b.y+b.h*0.53;
+    sk.r_el.x=b.x+b.w*0.72; sk.r_el.y=b.y+b.h*0.49; sk.r_ha.x=b.x+b.w*0.64; sk.r_ha.y=b.y+b.h*0.55;
+    sk.l_kn.x=b.x+b.w*0.34; sk.l_kn.y=b.y+b.h*0.76; sk.l_ft.x=b.x+b.w*0.26; sk.l_ft.y=b.y+b.h*0.93;
+    sk.r_kn.x=b.x+b.w*0.66; sk.r_kn.y=b.y+b.h*0.80; sk.r_ft.x=b.x+b.w*0.76; sk.r_ft.y=b.y+b.h*0.94;
   }
-  computeLengths(sk); draw();
+  draw();
 }
 function renderGreenStrip(){
-  greenC.width=2048; greenC.height=512;
-  gctx.fillStyle='#00c800'; gctx.fillRect(0,0,2048,512);
+  greenC.width=2048; greenC.height=512; gctx.fillStyle='#00c800'; gctx.fillRect(0,0,2048,512);
   for(let dir=0; dir<4; dir++){
-    let sk=skeletons[dir]; if(!sk) continue;
-    let offX=dir*512;
+    let sk=skeletons[dir]; if(!sk) continue; let offX=dir*512;
     function w2s(p){ return {x: offX + (p.x/frames[dir].w)*512, y: (p.y/frames[dir].h)*512}; }
-    function seg(a,b,thick,color){
-      let A=w2s(a), B=w2s(b);
-      let len=Math.hypot(B.x-A.x,B.y-A.y), ang=Math.atan2(B.y-A.y,B.x-A.x);
-      gctx.save(); gctx.translate(A.x,A.y); gctx.rotate(ang);
-      gctx.fillStyle=color; gctx.beginPath(); gctx.roundRect(0,-thick/2,len,thick,thick/2); gctx.fill(); gctx.restore();
-    }
+    function seg(a,b,thick,col){let A=w2s(a), B=w2s(b); let len=Math.hypot(B.x-A.x,B.y-A.y), ang=Math.atan2(B.y-A.y,B.x-A.x); gctx.save(); gctx.translate(A.x,A.y); gctx.rotate(ang); gctx.fillStyle=col; gctx.beginPath(); gctx.roundRect(0,-thick/2,len,thick,thick/2); gctx.fill(); gctx.restore();}
     let white='#e8e8e8';
-    seg(sk.hips, sk.spine, 22, white); seg(sk.spine, sk.chest, 28, white);
-    seg(sk.chest, sk.neck, 18, '#ffec8a'); seg(sk.neck, sk.head, 32, white);
-    seg(sk.chest, sk.l_clav, 12, white); seg(sk.chest, sk.r_clav, 12, white);
-    seg(sk.l_clav, sk.l_sh, 12, white); seg(sk.r_clav, sk.r_sh, 12, white);
+    seg(sk.hips, sk.spine, 22, white); seg(sk.spine, sk.chest, 28, white); seg(sk.chest, sk.neck, 18, '#ffeb7a'); seg(sk.neck, sk.head, 32, white);
     seg(sk.l_sh, sk.l_el, 16, white); seg(sk.l_el, sk.l_ha, 14, white);
     seg(sk.r_sh, sk.r_el, 16, white); seg(sk.r_el, sk.r_ha, 14, white);
-    seg(sk.hips, sk.l_hip, 12, white); seg(sk.hips, sk.r_hip, 12, white);
     seg(sk.l_hip, sk.l_kn, 20, white); seg(sk.l_kn, sk.l_ft, 18, white);
     seg(sk.r_hip, sk.r_kn, 20, white); seg(sk.r_kn, sk.r_ft, 18, white);
     let hp=w2s(sk.head); gctx.fillStyle=white; gctx.beginPath(); gctx.arc(hp.x, hp.y-6, 18,0,Math.PI*2); gctx.fill();
   }
 }
-document.getElementById('file').addEventListener('change',e=>{
-  const file=e.target.files[0]; if(!file) return;
-  const url=URL.createObjectURL(file); srcImg=new Image();
-  srcImg.onload=()=>{slice();}; srcImg.src=url;
-});
-document.getElementById('autoBone').onclick=()=>{if(!frames[cur]) return; const sk=createAccurateSkeleton(frames[cur].b,cur); computeLengths(sk); skeletons[cur]=sk; draw();};
-document.getElementById('btnReset').onclick=()=>{if(!frames[cur]) return; const sk=createAccurateSkeleton(frames[cur].b,cur); computeLengths(sk); skeletons[cur]=sk; draw();};
-document.getElementById('btnIdle').onclick=()=>{for(let i=0;i<4;i++){const sk=createAccurateSkeleton(frames[i].b,i); computeLengths(sk); skeletons[i]=sk;} cur=0; buildThumbs(); draw();};
+document.getElementById('file').addEventListener('change',e=>{const file=e.target.files[0]; if(!file) return; const url=URL.createObjectURL(file); srcImg=new Image(); srcImg.onload=()=>{slice();}; srcImg.src=url;});
+document.getElementById('autoBone').onclick=()=>{if(!frames[cur]) return; skeletons[cur]=createRigidSkeleton(frames[cur].b,cur); draw();};
+document.getElementById('btnReset').onclick=()=>{if(!frames[cur]) return; skeletons[cur]=createRigidSkeleton(frames[cur].b,cur); draw();};
+document.getElementById('btnIdle').onclick=()=>{for(let i=0;i<4;i++) skeletons[i]=createRigidSkeleton(frames[i].b,i); cur=0; buildThumbs(); draw();};
 document.getElementById('btnIdlePose').onclick=()=>{applyPreset('idle');};
 document.getElementById('btnWalkPose').onclick=()=>{applyPreset('walk');};
 document.getElementById('btnFightPose').onclick=()=>{applyPreset('fight');};
-document.getElementById('btnCopy').onclick=()=>{
-  if(!frames[cur]) return;
-  let base=JSON.parse(JSON.stringify(skeletons[cur]));
-  for(let i=0;i<4;i++){
-    if(i===cur) continue;
-    let nb=frames[i].b; let ob=frames[cur].b;
-    function mapP(p){ let rx=(p.x-ob.x)/ob.w; let ry=(p.y-ob.y)/ob.h; return {x: nb.x+rx*nb.w, y: nb.y+ry*nb.h}; }
-    let ns={}; for(let k in base){ if(k==='_len') continue; ns[k]=mapP(base[k]); } ns._len=base._len;
-    skeletons[i]=ns;
-  }
-  draw();
-};
-document.getElementById('btnMirror').onclick=()=>{
-  if(!skeletons[0]) return;
-  for(let i=1;i<4;i++){
-    let b=frames[i].b;
-    let sk=createAccurateSkeleton(b,i);
-    let base=skeletons[0];
-    let ob=frames[0].b;
-    function mapP(p){ let rx=(p.x-ob.x)/ob.w; let ry=(p.y-ob.y)/ob.h; return {x: b.x+rx*b.w, y: b.y+ry*b.h}; }
-    for(let k in base){ if(k==='_len') continue; sk[k]=mapP(base[k]); }
-    skeletons[i]=sk; computeLengths(sk);
-  }
-  cur=1; buildThumbs(); draw();
-};
-document.getElementById('export').onclick=()=>{
-  ectx.clearRect(0,0,8192,2048);
-  frames.forEach((f,i)=>{ectx.drawImage(f.canvas,0,0,f.w,f.h,i*2048,0,2048,2048);});
-  const a=document.createElement('a'); a.download='original_8192x2048.png'; a.href=exportC.toDataURL('image/png'); a.click();
-};
-document.getElementById('exportGreen').onclick=()=>{
-  renderGreenStrip();
-  const a=document.createElement('a'); a.download='green_4dir_2048x512.png'; a.href=greenC.toDataURL('image/png'); a.click();
-};
+document.getElementById('btnCopy').onclick=()=>{if(!frames[cur]) return; let base=skeletons[cur]; for(let i=0;i<4;i++){ if(i===cur) continue; let nb=frames[i].b, ob=frames[cur].b; function mapP(p){ let rx=(p.x-ob.x)/ob.w, ry=(p.y-ob.y)/ob.h; return {x: nb.x+rx*nb.w, y: nb.y+ry*nb.h}; } let ns={}; for(let k in base){ if(k.startsWith('_')) continue; ns[k]=mapP(base[k]); } ns._fixed=base._fixed; skeletons[i]=ns; } draw();};
+document.getElementById('export').onclick=()=>{ectx.clearRect(0,0,8192,2048); frames.forEach((f,i)=>{ectx.drawImage(f.canvas,0,0,f.w,f.h,i*2048,0,2048,2048);}); const a=document.createElement('a'); a.download='original_8192.png'; a.href=exportC.toDataURL('image/png'); a.click();};
+document.getElementById('exportGreen').onclick=()=>{renderGreenStrip(); const a=document.createElement('a'); a.download='rigido_verde_4dir.png'; a.href=greenC.toDataURL('image/png'); a.click();};
 draw();
 </script>
 </body>
