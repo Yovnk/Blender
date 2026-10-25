@@ -1,164 +1,153 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>BONE EDITOR BOUNDS FIX</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Real Bone Deform 4 Dir</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#0a0a0a;color:#fff;font-family:system-ui}
-#top{background:#18181b;padding:10px;display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid #333}
-input[type=file]{background:#2a2a2e;color:#fff;border-radius:6px;padding:6px;width:100%}
-button{padding:12px;border-radius:8px;border:0;font-weight:700;margin-top:8px;width:100%}
-button.primary{background:#7c5cff;color:#fff}
-button.ghost{background:#2a2a2e;color:#fff}
-#canvasBox{width:100%;height:68vh;background:repeating-conic-gradient(#1e1e1e 0% 25%, #151515 0% 50%) 0 0 / 20px 20px;display:flex;align-items:center;justify-content:center;touch-action:none}
+*{box-sizing:border-box}body{margin:0;background:#0a0a0a;color:#fff;font-family:system-ui}
+#top{background:#18181b;padding:10px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #333}
+#top strong{width:100%}input{width:100%;background:#2a2a2e;color:#fff;padding:6px;border-radius:6px}
+button{padding:12px;border-radius:8px;border:0;font-weight:700;margin-top:6px;width:100%}
+.primary{background:#7c5cff;color:#fff} .ghost{background:#2a2a2e;color:#fff}
+#canvasBox{width:100%;height:62vh;background:repeating-conic-gradient(#1e1e1e 0% 25%,#151515 0% 50%) 0 0 /20px 20px;display:flex;justify-content:center;align-items:center;touch-action:none}
 #c{max-width:100%;max-height:100%}
-.frameThumb{width:60px;height:60px;border:2px solid #333;border-radius:8px;margin:4px;display:inline-block;overflow:hidden;background:#000;position:relative}
-.frameThumb.active{border-color:#7c5cff}
-.frameThumb span{position:absolute;bottom:0;left:0;right:0;background:#000a;font-size:9px;text-align:center}
-#thumbs{display:flex;flex-wrap:wrap}
-#status{background:#000;padding:8px;border-radius:6px;margin-top:8px;font-size:12px;color:#7c5cff}
+#thumbs{display:flex;gap:4px;flex-wrap:wrap;padding:8px;background:#18181b}
+.th{width:72px;height:72px;border:2px solid #333;border-radius:8px;overflow:hidden;position:relative;background:#000}
+.th.active{border-color:#7c5cff} .th span{position:absolute;bottom:0;left:0;right:0;background:#000c;font-size:9px;text-align:center}
+#panel{padding:10px;background:#18181b}
+#status{background:#000;padding:8px;border-radius:6px;font-size:12px;color:#7c5cff;margin-bottom:6px}
 </style>
 </head>
 <body>
 <div id="top">
-<strong>BONE EDITOR - AJUSTE A MANIQUI REAL</strong>
+<strong>BONE EDITOR REAL - Mueve el cuerpo</strong>
 <input type="file" id="file" accept="image/*">
-<button class="ghost" id="autoBone" style="width:48%;display:inline-block">Auto huesos (ajustar a sprite)</button>
-<button class="ghost" id="btnFit" style="width:48%;display:inline-block">Centrar huesos</button>
+<button class="ghost" id="autoBone" style="width:49%">Auto detectar 4 dir</button>
+<button class="ghost" id="btnReset" style="width:49%">Reset</button>
 </div>
 <div id="canvasBox"><canvas id="c" width="800" height="800"></canvas></div>
-<div style="padding:12px;background:#18181b">
-<div id="status">Sube tu personaje_idle_strip4.png - ahora el esqueleto se ajusta al maniqui chiquito</div>
 <div id="thumbs"></div>
-<label>Frame: <b id="curLabel">-</b> <span id="dirLabel"></span></label>
+<div id="panel">
+<div id="status">1. Sube tu personaje_idle_strip4.png - 2. Arrastra punto rojo y el cuerpo se dobla</div>
 <label><input type="checkbox" id="showBones" checked> Mostrar huesos</label>
-<button class="ghost" id="btnIdle">Reset T-Pose</button>
+<div style="display:flex;gap:6px"><button class="ghost" id="btnIdle" style="width:50%">T-Pose 4 dir</button><button class="ghost" id="btnCopy" style="width:50%">Copiar pose a todos</button></div>
 <button class="primary" id="export">EXPORTAR 8192x2048 strip4.png</button>
 </div>
 <canvas id="exportC" width="8192" height="2048" style="display:none"></canvas>
 <script>
 const DIRS=['Front 0°','Front 45°','Side 90°','Back 135°'];
-let srcImg=new Image(), framesImg=[], skeletons=[], bounds=[], curFrame=0, dragJoint=null;
+let srcImg=new Image(), frames=[], skeletons=[], cur=0, drag=null;
 const c=document.getElementById('c'), ctx=c.getContext('2d');
 const exportC=document.getElementById('exportC'), ectx=exportC.getContext('2d');
 const statusEl=document.getElementById('status');
 function log(m){statusEl.textContent=m;}
-function getSpriteBounds(canvas){
-  const w=canvas.width, h=canvas.height;
-  const data=canvas.getContext('2d').getImageData(0,0,w,h).data;
-  let minX=w,minY=h,maxX=0,maxY=0, found=false;
-  for(let y=0;y<h;y+=2){
-    for(let x=0;x<w;x+=2){
-      const idx=(y*w+x)*4;
-      if(data[idx+3]>20){
-        if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; found=true;
-      }
-    }
-  }
-  if(!found) return {x:0,y:0,w:w,h:h};
+function getBounds(canvas){
+  const w=canvas.width,h=canvas.height;
+  const d=canvas.getContext('2d').getImageData(0,0,w,h).data;
+  let minX=w,minY=h,maxX=0,maxY=0,f=false;
+  for(let y=0;y<h;y+=3){for(let x=0;x<w;x+=3){let i=(y*w+x)*4; if(d[i+3]>15){if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; f=true;}}}
+  if(!f) return {x:0,y:0,w:w,h:h};
   return {x:minX,y:minY,w:maxX-minX,h:maxY-minY};
 }
-function createSkeletonForBounds(bound, dir){
-  const bx=bound.x, by=bound.y, bw=bound.w, bh=bound.h;
-  const toAbs = (rx, ry) => ({x: (bx + rx*bw)/framesImg[0].w, y: (by + ry*bh)/framesImg[0].h});
-  if(dir===0){
-    return {joints:{torso:toAbs(0.5,0.5), head:toAbs(0.5,0.12), l_shoulder:toAbs(0.30,0.35), l_elbow:toAbs(0.10,0.45), l_hand:toAbs(0.02,0.55), r_shoulder:toAbs(0.70,0.35), r_elbow:toAbs(0.90,0.45), r_hand:toAbs(0.98,0.55), l_hip:toAbs(0.42,0.65), l_knee:toAbs(0.38,0.82), l_foot:toAbs(0.35,0.98), r_hip:toAbs(0.58,0.65), r_knee:toAbs(0.62,0.82), r_foot:toAbs(0.65,0.98)}};
-  }
-  if(dir===1){
-    return {joints:{torso:toAbs(0.52,0.5), head:toAbs(0.53,0.12), l_shoulder:toAbs(0.35,0.34), l_elbow:toAbs(0.20,0.44), l_hand:toAbs(0.08,0.52), r_shoulder:toAbs(0.65,0.36), r_elbow:toAbs(0.75,0.46), r_hand:toAbs(0.82,0.52), l_hip:toAbs(0.44,0.65), l_knee:toAbs(0.40,0.82), l_foot:toAbs(0.38,0.98), r_hip:toAbs(0.56,0.66), r_knee:toAbs(0.58,0.83), r_foot:toAbs(0.60,0.98)}};
-  }
-  if(dir===2){
-    return {joints:{torso:toAbs(0.5,0.5), head:toAbs(0.51,0.12), l_shoulder:toAbs(0.5,0.32), l_elbow:toAbs(0.62,0.42), l_hand:toAbs(0.74,0.46), r_shoulder:toAbs(0.49,0.33), r_elbow:toAbs(0.42,0.42), r_hand:toAbs(0.36,0.44), l_hip:toAbs(0.5,0.64), l_knee:toAbs(0.54,0.80), l_foot:toAbs(0.56,0.97), r_hip:toAbs(0.48,0.64), r_knee:toAbs(0.46,0.80), r_foot:toAbs(0.44,0.97)}};
-  }
-  return {joints:{torso:toAbs(0.48,0.5), head:toAbs(0.47,0.12), l_shoulder:toAbs(0.38,0.32), l_elbow:toAbs(0.28,0.42), l_hand:toAbs(0.18,0.46), r_shoulder:toAbs(0.56,0.33), r_elbow:toAbs(0.62,0.42), r_hand:toAbs(0.68,0.44), l_hip:toAbs(0.46,0.64), l_knee:toAbs(0.44,0.80), l_foot:toAbs(0.42,0.97), r_hip:toAbs(0.52,0.64), r_knee:toAbs(0.54,0.80), r_foot:toAbs(0.56,0.97)}};
+function skeletonForDir(b, dir){
+  const x=b.x, y=b.y, w=b.w, h=b.h;
+  const P=(rx,ry)=>({x:x+rx*w, y:y+ry*h});
+  if(dir===0) return {torso:P(0.5,0.50), head:P(0.5,0.12), l_sh:P(0.30,0.36), l_el:P(0.12,0.46), l_ha:P(0.02,0.52), r_sh:P(0.70,0.36), r_el:P(0.88,0.46), r_ha:P(0.98,0.52), l_hip:P(0.42,0.66), l_kn:P(0.36,0.84), l_ft:P(0.32,0.98), r_hip:P(0.58,0.66), r_kn:P(0.64,0.84), r_ft:P(0.68,0.98)};
+  if(dir===1) return {torso:P(0.52,0.50), head:P(0.53,0.12), l_sh:P(0.35,0.35), l_el:P(0.20,0.44), l_ha:P(0.10,0.50), r_sh:P(0.66,0.37), r_el:P(0.78,0.45), r_ha:P(0.86,0.51), l_hip:P(0.44,0.66), l_kn:P(0.38,0.84), l_ft:P(0.36,0.98), r_hip:P(0.58,0.67), r_kn:P(0.62,0.84), r_ft:P(0.64,0.98)};
+  if(dir===2) return {torso:P(0.50,0.50), head:P(0.52,0.12), l_sh:P(0.50,0.34), l_el:P(0.64,0.40), l_ha:P(0.78,0.42), r_sh:P(0.48,0.35), r_el:P(0.42,0.41), r_ha:P(0.36,0.43), l_hip:P(0.50,0.65), l_kn:P(0.54,0.82), l_ft:P(0.56,0.98), r_hip:P(0.48,0.65), r_kn:P(0.46,0.82), r_ft:P(0.44,0.98)};
+  return {torso:P(0.48,0.50), head:P(0.46,0.12), l_sh:P(0.38,0.34), l_el:P(0.26,0.40), l_ha:P(0.14,0.44), r_sh:P(0.54,0.35), r_el:P(0.60,0.41), r_ha:P(0.66,0.43), l_hip:P(0.44,0.65), l_kn:P(0.42,0.82), l_ft:P(0.40,0.98), r_hip:P(0.52,0.65), r_kn:P(0.54,0.82), r_ft:P(0.56,0.98)};
 }
-function sliceIntoFrames(){
-  const cols=4; let fw=srcImg.width/cols, fh=srcImg.height;
-  framesImg=[]; skeletons=[]; bounds=[];
+function slice(){
+  const cols=4, fw=srcImg.width/cols, fh=srcImg.height;
+  frames=[]; skeletons=[];
   for(let i=0;i<cols;i++){
     const off=document.createElement('canvas'); off.width=fw; off.height=fh;
-    off.getContext('2d').drawImage(srcImg, i*fw,0,fw,fh,0,0,fw,fh);
-    framesImg.push({canvas:off,w:fw,h:fh});
-    bounds.push(getSpriteBounds(off));
+    off.getContext('2d').drawImage(srcImg,i*fw,0,fw,fh,0,0,fw,fh);
+    const b=getBounds(off);
+    frames.push({canvas:off,b:b,w:fw,h:fh});
+    skeletons.push(skeletonForDir(b,i));
   }
-  for(let i=0;i<4;i++){ skeletons.push(createSkeletonForBounds(bounds[i], i)); }
-  buildThumbs(); curFrame=0; draw();
-  log('Detectado maniqui - esqueleto ajustado adentro');
+  buildThumbs(); cur=0; draw(); log('4 dir detectadas - arrastra puntos rojos, el cuerpo se mueve');
 }
 function buildThumbs(){
   const cont=document.getElementById('thumbs'); cont.innerHTML='';
-  framesImg.forEach((f,i)=>{
-    const d=document.createElement('div'); d.className='frameThumb'+(i===curFrame?' active':'');
-    const mini=document.createElement('canvas'); mini.width=60; mini.height=60;
-    mini.getContext('2d').drawImage(f.canvas,0,0,f.w,f.h,0,0,60,60);
+  frames.forEach((f,i)=>{
+    const d=document.createElement('div'); d.className='th'+(i===cur?' active':'');
+    const mini=document.createElement('canvas'); mini.width=72; mini.height=72;
+    mini.getContext('2d').drawImage(f.canvas,0,0,f.w,f.h,0,0,72,72);
     d.appendChild(mini);
-    const s=document.createElement('span'); s.textContent=DIRS[i]; d.appendChild(s);
-    d.onclick=()=>{curFrame=i; buildThumbs(); draw();};
+    const sp=document.createElement('span'); sp.textContent=DIRS[i]; d.appendChild(sp);
+    d.onclick=()=>{cur=i; buildThumbs(); draw();};
     cont.appendChild(d);
   });
 }
-function getPos(e){
-  const r=c.getBoundingClientRect();
-  const touch=e.touches?e.touches[0]:e;
-  return {x:(touch.clientX-r.left)*(c.width/r.width), y:(touch.clientY-r.top)*(c.height/r.height)};
-}
+function getPos(e){const r=c.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)*(c.width/r.width), y:(t.clientY-r.top)*(c.height/r.height)};}
 function findJoint(x,y){
-  const sk=skeletons[curFrame]; if(!sk) return null;
-  let best=null, bestD=35;
-  const f=framesImg[curFrame];
-  const scale=Math.min((c.width*0.85)/f.w, (c.height*0.85)/f.h);
-  const realW=f.w*scale, realH=f.h*scale;
-  const ox=(c.width-realW)/2, oy=(c.height-realH)/2;
-  for(let n in sk.joints){
-    const j=sk.joints[n];
-    const sx=ox+j.x*realW, sy=oy+j.y*realH;
-    if(Math.hypot(x-sx,y-sy)<bestD){bestD=Math.hypot(x-sx,y-sy); best=n;}
-  }
+  const sk=skeletons[cur]; let best=null, bestD=45;
+  for(let k in sk){let p=sk[k]; let sx=worldToScreen(p).x, sy=worldToScreen(p).y; let d=Math.hypot(x-sx,y-sy); if(d<bestD){bestD=d; best=k;}}
   return best;
 }
-function startDrag(e){ e.preventDefault(); const p=getPos(e); const j=findJoint(p.x,p.y); if(j){dragJoint=j;} }
-function moveDrag(e){
-  if(!dragJoint) return; e.preventDefault();
-  const p=getPos(e);
-  const f=framesImg[curFrame];
+let view={ox:0,oy:0,scale:1};
+function calcView(){
+  const f=frames[cur]; if(!f) return;
   const scale=Math.min((c.width*0.85)/f.w, (c.height*0.85)/f.h);
-  const realW=f.w*scale, realH=f.h*scale;
-  const ox=(c.width-realW)/2, oy=(c.height-realH)/2;
-  const nx=(p.x-ox)/realW;
-  const ny=(p.y-oy)/realH;
-  skeletons[curFrame].joints[dragJoint].x=nx;
-  skeletons[curFrame].joints[dragJoint].y=ny;
-  draw();
+  const w=f.w*scale, h=f.h*scale;
+  view={ox:(c.width-w)/2, oy:(c.height-h)/2, scale,w,h,fw:f.w,fh:f.h};
 }
-function endDrag(){dragJoint=null;}
+function worldToScreen(p){return {x: view.ox + (p.x/frames[cur].w)*view.w, y: view.oy + (p.y/frames[cur].h)*view.h};}
+function screenToWorld(sx,sy){return {x: ((sx-view.ox)/view.w)*frames[cur].w, y: ((sy-view.oy)/view.h)*frames[cur].h};}
+function startDrag(e){e.preventDefault(); calcView(); const p=getPos(e); const j=findJoint(p.x,p.y); if(j) drag=j;}
+function moveDrag(e){if(!drag) return; e.preventDefault(); const p=getPos(e); const w=screenToWorld(p.x,p.y); skeletons[cur][drag]=w; draw();}
+function endDrag(){drag=null;}
 c.addEventListener('mousedown',startDrag); window.addEventListener('mousemove',moveDrag); window.addEventListener('mouseup',endDrag);
 c.addEventListener('touchstart',startDrag,{passive:false}); window.addEventListener('touchmove',moveDrag,{passive:false}); window.addEventListener('touchend',endDrag);
 function draw(){
-  ctx.clearRect(0,0,c.width,c.height);
-  if(!framesImg[curFrame]) return;
-  const f=framesImg[curFrame];
-  const scale=Math.min((c.width*0.85)/f.w, (c.height*0.85)/f.h);
-  const realW=f.w*scale, realH=f.h*scale;
-  const ox=(c.width-realW)/2, oy=(c.height-realH)/2;
-  ctx.drawImage(f.canvas,0,0,f.w,f.h,ox,oy,realW,realH);
-  const sk=skeletons[curFrame].joints;
-  const toScr=j=>({x:ox+j.x*realW, y:oy+j.y*realH});
-  function line(a,b){const A=toScr(sk[a]),B=toScr(sk[b]); ctx.strokeStyle=curFrame===1?'#ffcc00':'#7c5cff'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();}
-  line('torso','head'); line('torso','l_shoulder'); line('l_shoulder','l_elbow'); line('l_elbow','l_hand'); line('torso','r_shoulder'); line('r_shoulder','r_elbow'); line('r_elbow','r_hand'); line('torso','l_hip'); line('l_hip','l_knee'); line('l_knee','l_foot'); line('torso','r_hip'); line('r_hip','r_knee'); line('r_knee','r_foot');
-  for(let n in sk){const p=toScr(sk[n]); ctx.fillStyle=n.includes('hand')||n.includes('foot')?'#ff5c7c':(curFrame===1?'#ffcc00':'#7c5cff'); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(p.x,p.y,9,0,Math.PI*2); ctx.fill(); ctx.stroke();}
+  if(!frames[cur]){ctx.clearRect(0,0,c.width,c.height); return;}
+  calcView(); ctx.clearRect(0,0,c.width,c.height);
+  const sk=skeletons[cur]; const f=frames[cur];
+  function drawSegment(a,b,thick,color){
+    const A=worldToScreen(a), B=worldToScreen(b);
+    const len=Math.hypot(B.x-A.x,B.y-A.y), ang=Math.atan2(B.y-A.y,B.x-A.x);
+    ctx.save(); ctx.translate(A.x,A.y); ctx.rotate(ang);
+    ctx.fillStyle=color; ctx.beginPath(); ctx.roundRect(0,-thick/2,len,thick,thick/2); ctx.fill(); ctx.restore();
+  }
+  const white='#e9e9e9';
+  ctx.globalAlpha=0.18; ctx.drawImage(f.canvas,0,0,f.w,f.h,view.ox,view.oy,view.w,view.h); ctx.globalAlpha=1;
+  drawSegment(sk.torso, sk.head, view.w*0.18, white);
+  drawSegment(sk.torso, sk.l_sh, view.w*0.09, white);
+  drawSegment(sk.l_sh, sk.l_el, view.w*0.07, white);
+  drawSegment(sk.l_el, sk.l_ha, view.w*0.06, white);
+  drawSegment(sk.torso, sk.r_sh, view.w*0.09, white);
+  drawSegment(sk.r_sh, sk.r_el, view.w*0.07, white);
+  drawSegment(sk.r_el, sk.r_ha, view.w*0.06, white);
+  drawSegment(sk.torso, sk.l_hip, view.w*0.09, white);
+  drawSegment(sk.l_hip, sk.l_kn, view.w*0.08, white);
+  drawSegment(sk.l_kn, sk.l_ft, view.w*0.07, white);
+  drawSegment(sk.torso, sk.r_hip, view.w*0.09, white);
+  drawSegment(sk.r_hip, sk.r_kn, view.w*0.08, white);
+  drawSegment(sk.r_kn, sk.r_ft, view.w*0.07, white);
+  if(document.getElementById('showBones').checked){
+    for(let k in sk){
+      const p=worldToScreen(sk[k]);
+      const isEnd=k.includes('ha')||k.includes('ft');
+      ctx.fillStyle=isEnd?'#ff5c7c':'#7c5cff'; ctx.strokeStyle='#fff'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(p.x,p.y,isEnd?8:7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    }
+  }
 }
 document.getElementById('file').addEventListener('change',e=>{
-  const file=e.target.files[0]; const url=URL.createObjectURL(file);
-  srcImg=new Image(); srcImg.onload=()=>{ sliceIntoFrames(); }; srcImg.src=url;
+  const file=e.target.files[0]; if(!file) return;
+  const url=URL.createObjectURL(file); srcImg=new Image();
+  srcImg.onload=()=>{slice();}; srcImg.src=url;
 });
-document.getElementById('autoBone').onclick=()=>{ skeletons[curFrame]=createSkeletonForBounds(bounds[curFrame], curFrame); draw(); };
+document.getElementById('autoBone').onclick=()=>{if(!frames[cur]) return; skeletons[cur]=skeletonForDir(frames[cur].b,cur); draw();};
+document.getElementById('btnReset').onclick=()=>{if(!frames[cur]) return; skeletons[cur]=skeletonForDir(frames[cur].b,cur); draw();};
+document.getElementById('btnIdle').onclick=()=>{for(let i=0;i<4;i++) skeletons[i]=skeletonForDir(frames[i].b,i); cur=0; buildThumbs(); draw();};
 document.getElementById('export').onclick=()=>{
   ectx.clearRect(0,0,8192,2048);
-  framesImg.forEach((f,i)=>{ectx.drawImage(f.canvas,0,0,f.w,f.h,i*2048,0,2048,2048);});
-  const a=document.createElement('a'); a.download='personaje_4dir_strip4.png'; a.href=exportC.toDataURL('image/png'); a.click();
+  frames.forEach((f,i)=>{ectx.drawImage(f.canvas,0,0,f.w,f.h,i*2048,0,2048,2048);});
+  const a=document.createElement('a'); a.download='personaje_deform_4dir_strip4.png'; a.href=exportC.toDataURL('image/png'); a.click();
 };
 draw();
 </script>
