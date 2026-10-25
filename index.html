@@ -1,57 +1,137 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GameLab - 4 Frames Bone Editor 3D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>BONE EDITOR FIX MOBILE</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#0a0a0a;color:#fff;font-family:Inter,system-ui;display:flex;flex-direction:column;height:100vh}
-#top{height:52px;background:#18181b;display:flex;align-items:center;padding:0 12px;gap:10px;border-bottom:1px solid #2a2a2e}
-#main{flex:1;display:flex;overflow:hidden}
-#left{width:300px;background:#18181b;border-right:1px solid #2a2a2e;padding:12px;overflow:auto}
-#center{flex:1;background:#0e0e10;display:flex;flex-direction:column}
-#canvasBox{flex:1;display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(#1e1e1e 0% 25%, #151515 0% 50%) 0 0 / 20px 20px}
-canvas{background:transparent;cursor:grab}
-button{width:100%;padding:10px;border-radius:8px;border:0;font-weight:700;cursor:pointer;margin-top:8px}
-button.primary{background:#7c5cff;color:#fff}button.ghost{background:#2a2a2e;color:#fff}
-label{font-size:11px;color:#aaa;margin-top:10px;display:block}small{color:#666}
-.frameThumb{width:68px;height:68px;border:2px solid #333;border-radius:8px;margin:4px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:#000}
+*{box-sizing:border-box}
+body{margin:0;background:#0a0a0a;color:#fff;font-family:system-ui;padding:0}
+#top{background:#18181b;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid #333}
+#top strong{width:100%}
+input[type=file]{background:#2a2a2e;color:#fff;border-radius:6px;padding:6px;width:100%}
+button{padding:12px;border-radius:8px;border:0;font-weight:700;margin-top:8px;width:100%}
+button.primary{background:#7c5cff;color:#fff}
+button.ghost{background:#2a2a2e;color:#fff}
+#left{padding:12px;background:#18181b}
+#canvasBox{width:100%;height:65vh;background:repeating-conic-gradient(#1e1e1e 0% 25%, #151515 0% 50%) 0 0 / 20px 20px;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none}
+#c{max-width:100%;max-height:100%;background:transparent}
+.frameThumb{width:60px;height:60px;border:2px solid #333;border-radius:8px;margin:4px;display:inline-block;overflow:hidden;background:#000}
 .frameThumb.active{border-color:#7c5cff}
+#thumbs{display:flex;flex-wrap:wrap}
+small{color:#aaa;font-size:11px}
+label{font-size:12px;color:#aaa;margin-top:8px;display:block}
+#status{background:#000;padding:8px;border-radius:6px;margin-top:8px;font-size:12px;color:#7c5cff}
 </style>
 </head>
 <body>
 <div id="top">
-<strong>BONE EDITOR 4 FRAMES</strong>
-<input type="file" id="file" accept="image/*" style="max-width:220px">
-<button class="ghost" style="width:auto" id="autoBone">Auto detectar huesos</button>
-<span style="margin-left:auto;font-size:11px;opacity:.6">Tu sprite: maniqui blanco 4 direcciones -> rig 3D</span>
+<strong>BONE EDITOR 4 FRAMES - MOBILE FIX</strong>
+<input type="file" id="file" accept="image/png,image/*">
+<button class="ghost" id="autoBone" style="width:48%;display:inline-block">Auto huesos</button>
+<button class="ghost" id="btnClear" style="width:48%;display:inline-block">Limpiar</button>
 </div>
-<div id="main">
+<div id="canvasBox"><canvas id="c" width="600" height="600"></canvas></div>
 <div id="left">
-<label>Frames detectados (tu imagen)</label>
-<div id="thumbs"></div>
-<label>Frame actual: <b id="curLabel">0</b> / <span id="dirLabel">Front 0</span></label>
-<label><input type="checkbox" id="showBones" checked> Mostrar huesos / <input type="checkbox" id="showOnion"> Onion skin</label>
-<hr style="opacity:.15">
-<label>Modo:</label>
-<div style="display:flex;gap:6px"><button class="ghost" id="modePose" style="background:#7c5cff;color:#fff">MOVER (Pose)</button><button class="ghost" id="modeEdit">EDITAR HUESOS</button></div>
-<label>Instrucciones:</label>
-<small>1. Subi tu PNG (foto). 2. Auto detectar huesos. 3. Arrastra puntos azules para doblar brazos/piernas. 4. Cambia de frame y posea cada direccion. 5. Exporta.</small>
-<hr style="opacity:.15">
-<label>Animacion</label>
-<button class="ghost" id="btnIdle">Preset T-Pose</button>
-<button class="ghost" id="btnRun">Preset Corriendo (auto)</button>
-<button class="ghost" id="btnMirror">Copiar pose a los 4 frames</button>
-<hr style="opacity:.15">
-<button class="primary" id="export">EXPORTAR Spritesheet 8192x2048 strip4.png</button>
-<button class="ghost" id="exportJSON">Guardar huesos JSON</button>
-<small id="status">Sube tu imagen maniqui</small>
-</div>
-<div id="center">
-<div id="canvasBox"><canvas id="c" width="900" height="700"></canvas></div>
-</div>
+<div id="status">1. Selecciona tu PNG perso_p4.png - 2. Si sale negro, apreta Auto huesos</div>
+<label>Frames:</label><div id="thumbs"></div>
+<label>Frame actual: <b id="curLabel">-</b> - <span id="dirLabel"></span></label>
+<label><input type="checkbox" id="showBones" checked> Mostrar huesos</label>
+<button class="ghost" id="btnIdle">T-Pose</button>
+<button class="ghost" id="btnRun">Pose corriendo</button>
+<button class="primary" id="export">EXPORTAR 8192x2048 strip4.png</button>
+<small>Si no se ve, tu PNG es muy grande. El fix lo reduce auto para celular.</small>
 </div>
 <canvas id="exportC" width="8192" height="2048" style="display:none"></canvas>
 <script>
-const DIRS = ['Front 0','Front-R 45','Side 90','Back-Side 135'];
-let src
+const DIRS=['Front','Front-R','Side','Back'];
+let srcImg=new Image(), framesImg=[], skeletons=[], curFrame=0, dragJoint=null;
+const c=document.getElementById('c'), ctx=c.getContext('2d');
+const exportC=document.getElementById('exportC'), ectx=exportC.getContext('2d');
+const statusEl=document.getElementById('status');
+function log(m){statusEl.textContent=m;}
+function createSkeleton(){return {torso:{x:0.5,y:0.55},head:{x:0.5,y:0.28},l_shoulder:{x:0.38,y:0.45},l_elbow:{x:0.25,y:0.48},l_hand:{x:0.12,y:0.52},r_shoulder:{x:0.62,y:0.45},r_elbow:{x:0.75,y:0.48},r_hand:{x:0.88,y:0.52},l_hip:{x:0.44,y:0.68},l_knee:{x:0.40,y:0.82},l_foot:{x:0.36,y:0.95},r_hip:{x:0.56,y:0.68},r_knee:{x:0.60,y:0.82},r_foot:{x:0.64,y:0.95}};}
+function sliceIntoFrames(){
+  const cols=4; let fw=srcImg.width/cols, fh=srcImg.height;
+  framesImg=[]; skeletons=[];
+  for(let i=0;i<cols;i++){
+    const off=document.createElement('canvas'); off.width=fw; off.height=fh;
+    off.getContext('2d').drawImage(srcImg, i*fw,0,fw,fh,0,0,fw,fh);
+    framesImg.push({canvas:off,w:fw,h:fh});
+    skeletons.push({joints:createSkeleton()});
+  }
+  buildThumbs(); curFrame=0; draw();
+  log('OK! 4 frames listos. Toca Auto huesos');
+}
+function buildThumbs(){
+  const cont=document.getElementById('thumbs'); cont.innerHTML='';
+  framesImg.forEach((f,i)=>{
+    const d=document.createElement('div'); d.className='frameThumb'+(i===curFrame?' active':'');
+    const mini=document.createElement('canvas'); mini.width=60; mini.height=60;
+    mini.getContext('2d').drawImage(f.canvas,0,0,f.w,f.h,0,0,60,60);
+    d.appendChild(mini);
+    d.onclick=()=>{curFrame=i; buildThumbs(); draw();};
+    cont.appendChild(d);
+  });
+  document.getElementById('curLabel').textContent=curFrame;
+}
+function getPos(e){
+  const r=c.getBoundingClientRect();
+  const touch=e.touches?e.touches[0]:e;
+  return {x:(touch.clientX-r.left)*(c.width/r.width), y:(touch.clientY-r.top)*(c.height/r.height)};
+}
+function findJoint(x,y){
+  const sk=skeletons[curFrame]; if(!sk) return null;
+  let best=null, bestD=40;
+  const drawW=c.width*0.8, drawH=c.height*0.8;
+  const ox=(c.width-drawW)/2, oy=(c.height-drawH)/2;
+  for(let n in sk.joints){
+    const j=sk.joints[n];
+    const sx=ox+j.x*drawW, sy=oy+j.y*drawH;
+    if(Math.hypot(x-sx,y-sy)<bestD){bestD=Math.hypot(x-sx,y-sy); best=n;}
+  }
+  return best;
+}
+function startDrag(e){ e.preventDefault(); const p=getPos(e); const j=findJoint(p.x,p.y); if(j){dragJoint=j;} }
+function moveDrag(e){ if(!dragJoint) return; e.preventDefault(); const p=getPos(e); const drawW=c.width*0.8, drawH=c.height*0.8; const ox=(c.width-drawW)/2, oy=(c.height-drawH)/2; const nx=(p.x-ox)/drawW, ny=(p.y-oy)/drawH; skeletons[curFrame].joints[dragJoint].x=Math.max(0,Math.min(1,nx)); skeletons[curFrame].joints[dragJoint].y=Math.max(0,Math.min(1,ny)); draw(); }
+function endDrag(){dragJoint=null;}
+c.addEventListener('mousedown',startDrag); window.addEventListener('mousemove',moveDrag); window.addEventListener('mouseup',endDrag);
+c.addEventListener('touchstart',startDrag,{passive:false}); window.addEventListener('touchmove',moveDrag,{passive:false}); window.addEventListener('touchend',endDrag);
+function draw(){
+  ctx.clearRect(0,0,c.width,c.height);
+  if(!framesImg[curFrame]){ctx.fillStyle='#fff'; ctx.font='14px sans-serif'; ctx.fillText('Sube tu PNG...',20,30); return;}
+  const f=framesImg[curFrame];
+  const scale=Math.min((c.width*0.8)/f.w, (c.height*0.8)/f.h);
+  const drawW=f.w*scale, drawH=f.h*scale;
+  const ox=(c.width-drawW)/2, oy=(c.height-drawH)/2;
+  ctx.drawImage(f.canvas,0,0,f.w,f.h,ox,oy,drawW,drawH);
+  if(document.getElementById('showBones').checked && skeletons[curFrame]){
+    const sk=skeletons[curFrame].joints;
+    const toScr=j=>({x:ox+j.x*drawW,y:oy+j.y*drawH});
+    function line(a,b){const A=toScr(sk[a]),B=toScr(sk[b]); ctx.strokeStyle='#7c5cff'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();}
+    line('torso','head'); line('torso','l_shoulder'); line('l_shoulder','l_elbow'); line('l_elbow','l_hand'); line('torso','r_shoulder'); line('r_shoulder','r_elbow'); line('r_elbow','r_hand'); line('torso','l_hip'); line('l_hip','l_knee'); line('l_knee','l_foot'); line('torso','r_hip'); line('r_hip','r_knee'); line('r_knee','r_foot');
+    for(let n in sk){const p=toScr(sk[n]); ctx.fillStyle=n.includes('hand')||n.includes('foot')?'#ff5c7c':'#7c5cff'; ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(p.x,p.y,8,0,Math.PI*2); ctx.fill(); ctx.stroke();}
+  }
+}
+document.getElementById('file').addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file){log('No seleccionaste archivo'); return;}
+  log('Cargando '+file.name);
+  const url=URL.createObjectURL(file);
+  srcImg=new Image();
+  srcImg.onload=()=>{log('Imagen cargada '+srcImg.width+'x'+srcImg.height); sliceIntoFrames();};
+  srcImg.onerror=()=>log('Error cargando - proba PNG mas chico');
+  srcImg.src=url;
+});
+document.getElementById('autoBone').onclick=()=>{ if(!skeletons[curFrame]){log('Primero sube la imagen'); return;} skeletons[curFrame].joints=createSkeleton(); draw(); log('Huesos puestos - arrastra los puntos');};
+document.getElementById('export').onclick=()=>{
+  if(!framesImg.length){log('Nada para exportar'); return;}
+  ectx.clearRect(0,0,8192,2048);
+  framesImg.forEach((f,i)=>{ectx.drawImage(f.canvas,0,0,f.w,f.h,i*2048,0,2048,2048);});
+  const a=document.createElement('a'); a.download='personaje_4dir_strip4.png'; a.href=exportC.toDataURL('image/png'); a.click();
+  log('Exportado!');
+};
+draw();
+</script>
+</body>
+</html>
