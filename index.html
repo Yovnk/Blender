@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Editor RIGIDO + ZOOM Auto-Return FIX</title>
+<title>Editor RIGIDO + ZOOM FIX FINAL</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font-family:system-ui}
 #top{background:#111;padding:8px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #222}
@@ -22,14 +22,14 @@ button{padding:11px;border-radius:8px;border:0;font-weight:700;margin-top:5px;wi
 </head>
 <body>
 <div id="top">
-<strong>RIGIDO + ZOOM FIX</strong>
+<strong>RIGIDO + ZOOM FIX FINAL - Columna Centrada</strong>
 <input type="file" id="file" accept="image/*">
 <div style="display:flex;gap:6px;width:100%"><button class="ghost" id="autoBone" style="width:50%">Auto calzar</button><button class="ghost" id="btnReset" style="width:50%">Reset T-Pose</button></div>
 </div>
 <div id="canvasBox"><canvas id="c" width="1024" height="1024"></canvas><div id="zoomInfo">Zoom 1.0x</div></div>
 <div id="thumbs"></div>
 <div id="panel">
-<div id="status">FIX: cuello fijo + zoom vuelve solo - ya no se rompe el drag</div>
+<div id="status">FIX FINAL: columna centrada fija + codos/rodillas movibles + punto rojo sigue</div>
 <label><input type="checkbox" id="showBones" checked> Esqueleto</label>
 <label><input type="checkbox" id="showFloor" checked> Piso 45°</label>
 <label><input type="checkbox" id="showSprite" checked> Sprite base 0.15</label>
@@ -76,13 +76,14 @@ function createRigidSkeleton(b, dir){
   else sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.49,0.30), head:P(0.48,0.15), l_sh:P(0.34,0.38), l_el:P(0.22,0.40), l_ha:P(0.12,0.42), r_sh:P(0.66,0.39), r_el:P(0.74,0.40), r_ha:P(0.82,0.41), l_hip:P(0.45,0.64), l_kn:P(0.43,0.81), l_ft:P(0.41,0.96), r_hip:P(0.55,0.64), r_kn:P(0.57,0.81), r_ft:P(0.59,0.96)};
   function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
   sk._fixed={hips_spine:dist(sk.hips,sk.spine), spine_chest:dist(sk.spine,sk.chest), chest_neck:dist(sk.chest,sk.neck), neck_head:dist(sk.neck,sk.head), l_up:dist(sk.l_sh,sk.l_el), l_low:dist(sk.l_el,sk.l_ha), r_up:dist(sk.r_sh,sk.r_el), r_low:dist(sk.r_el,sk.r_ha), l_thigh:dist(sk.l_hip,sk.l_kn), l_shin:dist(sk.l_kn,sk.l_ft), r_thigh:dist(sk.r_hip,sk.r_kn), r_shin:dist(sk.r_kn,sk.r_ft)};
+  sk._center={x:b.x+b.w*0.50, y:b.y+b.h*0.62};
   return sk;
 }
 function slice(){
   const cols=4, fw=srcImg.width/cols, fh=srcImg.height;
   frames=[]; skeletons=[];
   for(let i=0;i<cols;i++){const off=document.createElement('canvas'); off.width=fw; off.height=fh; off.getContext('2d').drawImage(srcImg,i*fw,0,fw,fh,0,0,fw,fh); const b=getBounds(off); frames.push({canvas:off,b:b,w:fw,h:fh}); skeletons.push(createRigidSkeleton(b,i));}
-  buildThumbs(); cur=0; draw(); log('FIX OK: cuello fijo + zoom');
+  buildThumbs(); cur=0; draw(); log('FIX FINAL OK');
 }
 function buildThumbs(){const cont=document.getElementById('thumbs'); cont.innerHTML=''; frames.forEach((f,i)=>{const d=document.createElement('div'); d.className='th'+(i===cur?' active':''); const mini=document.createElement('canvas'); mini.width=70; mini.height=70; mini.getContext('2d').drawImage(f.canvas,0,0,f.w,f.h,5,5,60,60); d.appendChild(mini); const sp=document.createElement('span'); sp.textContent=DIRS[i]; d.appendChild(sp); d.onclick=()=>{cur=i; buildThumbs(); draw();}; cont.appendChild(d);});}
 function solveLimb(shoulder, elbow, hand, target, lenUp, lenLow){
@@ -128,32 +129,66 @@ function setZoom(z){
 function worldToScreen(p){return {x: view.ox + (p.x/frames[cur].w)*view.w, y: view.oy + (p.y/frames[cur].h)*view.h};}
 function screenToWorld(sx,sy){return {x: ((sx-view.ox)/view.w)*frames[cur].w, y: ((sy-view.oy)/view.h)*frames[cur].h};}
 function getPos(e){const r=c.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)*(c.width/r.width), y:(t.clientY-r.top)*(c.height/r.height)};}
-function findJoint(x,y){const sk=skeletons[cur]; let best=null, bestD=42; for(let k in sk){if(k.startsWith('_')) continue; let p=sk[k]; let s=worldToScreen(p); let d=Math.hypot(x-s.x,y-s.y); if(d<bestD){bestD=d; best=k;}} return best;}
+function findJoint(x,y){
+  const sk=skeletons[cur]; 
+  let best=null, bestD=42; 
+  for(let k in sk){
+    if(k.startsWith('_')) continue;
+    if(['hips','spine','chest','neck'].includes(k)) continue;
+    let p=sk[k]; let s=worldToScreen(p); 
+    let d=Math.hypot(x-s.x,y-s.y); 
+    if(d<bestD){bestD=d; best=k;}
+  } 
+  return best;
+}
 function startDrag(e){if(e.touches && e.touches.length===2) return; e.preventDefault(); calcView(); const p=getPos(e); const j=findJoint(p.x,p.y); if(j) drag=j;}
 function moveDrag(e){
   if(e.touches && e.touches.length===2) return;
   if(!drag) return; e.preventDefault();
   const p=getPos(e); const w=screenToWorld(p.x,p.y);
   const sk=skeletons[cur]; const fix=sk._fixed;
-  if(['hips','spine','chest','neck'].includes(drag)){
-    let dx=w.x - sk[drag].x, dy=w.y - sk[drag].y;
-    ['hips','spine','chest','neck','head','l_sh','r_sh','l_hip','r_hip'].forEach(k=>{if(sk[k]){sk[k].x+=dx; sk[k].y+=dy;}});
-    let dir=Math.atan2(sk.neck.y-sk.chest.y, sk.neck.x-sk.chest.x);
-    sk.neck.x=sk.chest.x + Math.cos(dir)*fix.chest_neck; sk.neck.y=sk.chest.y + Math.sin(dir)*fix.chest_neck;
-    let dir2=Math.atan2(sk.head.y-sk.neck.y, sk.head.x-sk.neck.x);
-    sk.head.x=sk.neck.x + Math.cos(dir2)*fix.neck_head; sk.head.y=sk.neck.y + Math.sin(dir2)*fix.neck_head;
-  } else if(drag==='head'){
+  if(drag==='head'){
     let a=Math.atan2(w.y-sk.neck.y, w.x-sk.neck.x);
     sk.head.x=sk.neck.x + Math.cos(a)*fix.neck_head; sk.head.y=sk.neck.y + Math.sin(a)*fix.neck_head;
   } else if(drag==='l_ha'){solveLimb(sk.l_sh, sk.l_el, sk.l_ha, w, fix.l_up, fix.l_low);}
   else if(drag==='r_ha'){solveLimb(sk.r_sh, sk.r_el, sk.r_ha, w, fix.r_up, fix.r_low);}
   else if(drag==='l_ft'){solveLimb(sk.l_hip, sk.l_kn, sk.l_ft, w, fix.l_thigh, fix.l_shin);}
   else if(drag==='r_ft'){solveLimb(sk.r_hip, sk.r_kn, sk.r_ft, w, fix.r_thigh, fix.r_shin);}
-  else if(['l_el','r_el','l_kn','r_kn'].includes(drag)){
-    let parent=drag==='l_el'?sk.l_sh : drag==='r_el'?sk.r_sh : drag==='l_kn'?sk.l_hip : sk.r_hip;
-    let len=drag==='l_el'?fix.l_up : drag==='r_el'?fix.r_up : drag==='l_kn'?fix.l_thigh : fix.r_thigh;
-    let a=Math.atan2(w.y-parent.y, w.x-parent.x);
-    sk[drag].x=parent.x + Math.cos(a)*len; sk[drag].y=parent.y + Math.sin(a)*len;
+  else if(drag==='l_el'){
+    let a=Math.atan2(w.y-sk.l_sh.y, w.x-sk.l_sh.x);
+    sk.l_el.x=sk.l_sh.x + Math.cos(a)*fix.l_up;
+    sk.l_el.y=sk.l_sh.y + Math.sin(a)*fix.l_up;
+    let dirX=sk.l_ha.x-sk.l_el.x, dirY=sk.l_ha.y-sk.l_el.y;
+    let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;}
+    sk.l_ha.x=sk.l_el.x + (dirX/d)*fix.l_low;
+    sk.l_ha.y=sk.l_el.y + (dirY/d)*fix.l_low;
+  }
+  else if(drag==='r_el'){
+    let a=Math.atan2(w.y-sk.r_sh.y, w.x-sk.r_sh.x);
+    sk.r_el.x=sk.r_sh.x + Math.cos(a)*fix.r_up;
+    sk.r_el.y=sk.r_sh.y + Math.sin(a)*fix.r_up;
+    let dirX=sk.r_ha.x-sk.r_el.x, dirY=sk.r_ha.y-sk.r_el.y;
+    let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;}
+    sk.r_ha.x=sk.r_el.x + (dirX/d)*fix.r_low;
+    sk.r_ha.y=sk.r_el.y + (dirY/d)*fix.r_low;
+  }
+  else if(drag==='l_kn'){
+    let a=Math.atan2(w.y-sk.l_hip.y, w.x-sk.l_hip.x);
+    sk.l_kn.x=sk.l_hip.x + Math.cos(a)*fix.l_thigh;
+    sk.l_kn.y=sk.l_hip.y + Math.sin(a)*fix.l_thigh;
+    let dirX=sk.l_ft.x-sk.l_kn.x, dirY=sk.l_ft.y-sk.l_kn.y;
+    let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;}
+    sk.l_ft.x=sk.l_kn.x + (dirX/d)*fix.l_shin;
+    sk.l_ft.y=sk.l_kn.y + (dirY/d)*fix.l_shin;
+  }
+  else if(drag==='r_kn'){
+    let a=Math.atan2(w.y-sk.r_hip.y, w.x-sk.r_hip.x);
+    sk.r_kn.x=sk.r_hip.x + Math.cos(a)*fix.r_thigh;
+    sk.r_kn.y=sk.r_hip.y + Math.sin(a)*fix.r_thigh;
+    let dirX=sk.r_ft.x-sk.r_kn.x, dirY=sk.r_ft.y-sk.r_kn.y;
+    let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;}
+    sk.r_ft.x=sk.r_kn.x + (dirX/d)*fix.r_shin;
+    sk.r_ft.y=sk.r_kn.y + (dirY/d)*fix.r_shin;
   }
   draw();
 }
@@ -215,8 +250,11 @@ function draw(){
   if(document.getElementById('showBones').checked){
     for(let k in sk){ if(k.startsWith('_')) continue;
       const p=worldToScreen(sk[k]);
-      ctx.fillStyle=k.includes('ha')||k.includes('ft')?'#ff4a6a':['hips','spine','chest','neck'].includes(k)?'#00ffcc':'#6cf2ff';
-      ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      let isRed=k.includes('ha')||k.includes('ft');
+      let isLocked=['hips','spine','chest','neck'].includes(k);
+      ctx.fillStyle=isRed?'#ff4a6a':isLocked?'#444444':'#6cf2ff';
+      ctx.strokeStyle=isLocked?'#666':'#fff'; ctx.lineWidth=2; 
+      ctx.beginPath(); ctx.arc(p.x,p.y,isLocked?3:5,0,Math.PI*2); ctx.fill(); ctx.stroke();
     }
   }
 }
@@ -259,7 +297,7 @@ document.getElementById('btnIdle').onclick=()=>{for(let i=0;i<4;i++) skeletons[i
 document.getElementById('btnIdlePose').onclick=()=>{applyPreset('idle');};
 document.getElementById('btnWalkPose').onclick=()=>{applyPreset('walk');};
 document.getElementById('btnFightPose').onclick=()=>{applyPreset('fight');};
-document.getElementById('btnCopy').onclick=()=>{if(!frames[cur]) return; let base=skeletons[cur]; for(let i=0;i<4;i++){ if(i===cur) continue; let nb=frames[i].b, ob=frames[cur].b; function mapP(p){ let rx=(p.x-ob.x)/ob.w, ry=(p.y-ob.y)/ob.h; return {x: nb.x+rx*nb.w, y: nb.y+ry*nb.h}; } let ns={}; for(let k in base){ if(k.startsWith('_')) continue; ns[k]=mapP(base[k]); } ns._fixed=base._fixed; skeletons[i]=ns; } draw();};
+document.getElementById('btnCopy').onclick=()=>{if(!frames[cur]) return; let base=skeletons[cur]; for(let i=0;i<4;i++){ if(i===cur) continue; let nb=frames[i].b, ob=frames[cur].b; function mapP(p){ let rx=(p.x-ob.x)/ob.w, ry=(p.y-ob.y)/ob.h; return {x: nb.x+rx*nb.w, y: nb.y+ry*nb.h}; } let ns={}; for(let k in base){ if(k.startsWith('_')) continue; ns[k]=mapP(base[k]); } ns._fixed=base._fixed; ns._center=base._center; skeletons[i]=ns; } draw();};
 document.getElementById('btnZoomReset').onclick=()=>{setZoom(1);};
 document.getElementById('export').onclick=()=>{ectx.clearRect(0,0,8192,2048); frames.forEach((f,i)=>{ectx.drawImage(f.canvas,0,0,f.w,f.h,i*2048,0,2048,2048);}); const a=document.createElement('a'); a.download='original_8192.png'; a.href=exportC.toDataURL('image/png'); a.click();};
 document.getElementById('exportGreen').onclick=()=>{renderGreenStrip(); const a=document.createElement('a'); a.download='rigido_verde_4dir.png'; a.href=greenC.toDataURL('image/png'); a.click();};
