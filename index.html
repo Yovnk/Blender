@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Editor RIGIDO - 1 FRAME BASE + 360° 4 DIRS</title>
+<title>Editor RIGIDO - YAW PITCH GLOBAL + FIX</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font-family:system-ui}
 #top{background:#111;padding:8px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #222}
 input{width:100%;background:#1e1e1e;color:#fff;padding:8px;border-radius:6px;border:1px solid #333}
+input[type=range]{padding:0}
 button{padding:11px;border-radius:8px;border:0;font-weight:700;margin-top:5px;width:100%}
 .primary{background:#00ff88;color:#000}.secondary{background:#7c5cff;color:#fff}.ghost{background:#222;color:#fff}
 #canvasBox{width:100%;height:62vh;background:#000;display:flex;justify-content:center;align-items:center;touch-action:none;position:relative}
@@ -18,29 +19,37 @@ button{padding:11px;border-radius:8px;border:0;font-weight:700;margin-top:5px;wi
 #panel{padding:8px;background:#111}
 #status{background:#0a0a0a;padding:6px;border-radius:6px;font-size:11px;color:#00ff88;margin-bottom:5px;border:1px solid #1a1a1a}
 #zoomInfo{position:absolute;top:10px;right:10px;background:#000c;color:#00ff88;padding:4px 8px;border-radius:12px;font-size:11px;border:1px solid #00ff88}
+.row{display:flex;gap:6px;width:100%}
 </style>
 </head>
 <body>
 <div id="top">
-<strong>RIGIDO - 1 FRAME BASE + 360° 4 DIRS</strong>
+<strong>RIGIDO - YAW PITCH GLOBAL</strong>
 <input type="file" id="file" accept="image/*">
-<div style="display:flex;gap:6px;width:100%"><button class="ghost" id="autoBone" style="width:50%">Auto calzar</button><button class="ghost" id="btnReset" style="width:50%">Reset T-Pose</button></div>
+<div class="row"><button class="ghost" id="autoBone" style="width:50%">Auto calzar</button><button class="ghost" id="btnReset" style="width:50%">Reset T-Pose</button></div>
 </div>
 <div id="canvasBox"><canvas id="c" width="1024" height="1024"></canvas><div id="zoomInfo">Zoom 1.0x</div></div>
 <div id="thumbs"></div>
 <div id="panel">
-<div id="status">PNG frente centro - 1 frame base en 4 dirs - 360° hombros/caderas ON</div>
+<div id="status">1 frame 1x1/1x3/1x4 - YAW PITCH GLOBAL - 360° ON</div>
 <label><input type="checkbox" id="showBones" checked> Esqueleto 3D</label>
 <label><input type="checkbox" id="showFloor" checked> Piso 45°</label>
 <label><input type="checkbox" id="showSprite" checked> Sprite base 0.15</label>
 <label style="color:#ffeb7a"><input type="checkbox" id="autoZoomReturn"> Zoom vuelve solo</label>
-<div style="display:flex;gap:5px">
+
+<div style="background:#1a1a1a;padding:8px;border-radius:8px;margin:6px 0;border:1px solid #333">
+<strong style="color:#ffeb7a">ROTACION GLOBAL SIN CAMBIAR POSTURA</strong>
+<div class="row"><label style="width:50%">Yaw 360° <input type="range" id="yaw" min="0" max="360" value="0"><span id="yawVal">0°</span></label><label style="width:50%">Pitch <input type="range" id="pitch" min="-45" max="45" value="0"><span id="pitchVal">0°</span></label></div>
+<button class="ghost" id="btnResetRot">Reset Rotacion</button>
+</div>
+
+<div class="row">
 <button class="ghost" id="btnIdle" style="width:33%">T-Pose</button>
 <button class="ghost" id="btnIdlePose" style="width:33%">IDLE</button>
 <button class="ghost" id="btnWalkPose" style="width:33%">WALK</button>
 </div>
 <button class="ghost" id="btnFightPose">PELEA</button>
-<div style="display:flex;gap:5px">
+<div class="row">
 <button class="ghost" id="btnCopy" style="width:50%">Copiar a 4 dirs</button>
 <button class="ghost" id="btnZoomReset" style="width:50%">Zoom 1x</button>
 </div>
@@ -51,12 +60,13 @@ button{padding:11px;border-radius:8px;border:0;font-weight:700;margin-top:5px;wi
 <canvas id="greenC" width="2048" height="512" style="display:none"></canvas>
 <script>
 const DIRS=['Front 0°','Front 45°','Side 90°','Back 135°'];
-let srcImg=new Image(), frames=[], skeletons=[], cur=0, drag=null;
+let srcImg=new Image(), frames=[], skeletons=[], baseSkeletons=[], cur=0, drag=null;
 const c=document.getElementById('c'), ctx=c.getContext('2d');
 const exportC=document.getElementById('exportC'), ectx=exportC.getContext('2d');
 const greenC=document.getElementById('greenC'), gctx=greenC.getContext('2d');
 const statusEl=document.getElementById('status');
 const zoomInfo=document.getElementById('zoomInfo');
+let globalYaw=0, globalPitch=0;
 function log(m){statusEl.textContent=m;}
 function getBounds(canvas){
   const w=canvas.width,h=canvas.height;
@@ -79,26 +89,48 @@ function createRigidSkeleton(b, dir){
   sk._fixed={hips_spine:dist(sk.hips,sk.spine), spine_chest:dist(sk.spine,sk.chest), chest_neck:dist(sk.chest,sk.neck), neck_head:dist(sk.neck,sk.head), chest_l_sh:dist(sk.chest,sk.l_sh), chest_r_sh:dist(sk.chest,sk.r_sh), hips_l_hip:dist(sk.hips,sk.l_hip), hips_r_hip:dist(sk.hips,sk.r_hip), l_up:dist(sk.l_sh,sk.l_el), l_low:dist(sk.l_el,sk.l_ha), r_up:dist(sk.r_sh,sk.r_el), r_low:dist(sk.r_el,sk.r_ha), l_thigh:dist(sk.l_hip,sk.l_kn), l_shin:dist(sk.l_kn,sk.l_ft), r_thigh:dist(sk.r_hip,sk.r_kn), r_shin:dist(sk.r_kn,sk.r_ft)};
   return sk;
 }
-// --- FIX FINAL: 1 FRAME BASE + 360° EN 4 DIRS ---
 function slice(){
-  frames=[]; skeletons=[];
-  let isSheet = srcImg.width > srcImg.height * 1.5;
-  let baseCanvas=document.createElement('canvas');
-  if(isSheet){
-    let fw=srcImg.width/4, fh=srcImg.height;
-    baseCanvas.width=fw; baseCanvas.height=fh;
-    baseCanvas.getContext('2d').drawImage(srcImg,0,0,fw,fh,0,0,fw,fh);
-  }else{
-    baseCanvas.width=srcImg.width; baseCanvas.height=srcImg.height;
-    baseCanvas.getContext('2d').drawImage(srcImg,0,0);
+  frames=[]; skeletons=[]; baseSkeletons=[];
+  let count=1;
+  if(srcImg.width > srcImg.height * 1.2){
+    count=Math.round(srcImg.width/srcImg.height);
+    count=Math.max(1,Math.min(8,count));
   }
+  let fw=srcImg.width/count, fh=srcImg.height;
+  let baseCanvas=document.createElement('canvas');
+  baseCanvas.width=fw; baseCanvas.height=fh;
+  baseCanvas.getContext('2d').drawImage(srcImg,0,0,fw,fh,0,0,fw,fh);
   const b=getBounds(baseCanvas);
   for(let i=0;i<4;i++){
-    frames.push({canvas:baseCanvas,b:b,w:baseCanvas.width,h:baseCanvas.height});
-    skeletons.push(createRigidSkeleton(b,i));
+    frames.push({canvas:baseCanvas,b:b,w:fw,h:fh});
+    let sk=createRigidSkeleton(b,i);
+    skeletons.push(sk);
+    baseSkeletons.push(JSON.parse(JSON.stringify(sk)));
   }
   buildThumbs(); cur=0; draw();
-  log(isSheet ? 'Sheet 4 frames -> usando solo frame 0 en 4 dirs con 360°' : 'PNG frente centro -> mismo en 4 dirs con 360°');
+  log('Detectado '+count+' frames - frame 0 en 4 dirs - YAW/PITCH listo');
+}
+function applyGlobalRot(){
+  if(!baseSkeletons.length) return;
+  let yaw = globalYaw * Math.PI/180;
+  let pitch = globalPitch * Math.PI/180;
+  let cosYaw=Math.cos(yaw), cosPitch=Math.cos(pitch);
+  for(let dir=0; dir<4; dir++){
+    let base=baseSkeletons[dir];
+    let sk=skeletons[dir];
+    if(!base || !sk) continue;
+    let cx=base.hips.x, cy=base.hips.y;
+    for(let k in base){
+      if(k.startsWith('_')) continue;
+      let p=base[k];
+      let dx=p.x-cx, dy=p.y-cy;
+      sk[k].x = cx + dx * cosYaw;
+      sk[k].y = cy + dy * cosPitch;
+    }
+  }
+  document.getElementById('yawVal').textContent=globalYaw.toFixed(0)+'°';
+  document.getElementById('pitchVal').textContent=globalPitch.toFixed(0)+'°';
+  draw();
 }
 function buildThumbs(){const cont=document.getElementById('thumbs'); cont.innerHTML=''; frames.forEach((f,i)=>{const d=document.createElement('div'); d.className='th'+(i===cur?' active':''); const mini=document.createElement('canvas'); mini.width=70; mini.height=70; mini.getContext('2d').drawImage(f.canvas,0,0,f.w,f.h,5,5,60,60); d.appendChild(mini); const sp=document.createElement('span'); sp.textContent=DIRS[i]; d.appendChild(sp); d.onclick=()=>{cur=i; buildThumbs(); draw();}; cont.appendChild(d);});}
 function solveLimb(shoulder, elbow, hand, target, lenUp, lenLow){
@@ -158,20 +190,20 @@ function moveDrag(e){
   if(e.touches && e.touches.length===2) return;
   if(!drag) return; e.preventDefault();
   const p=getPos(e); const w=screenToWorld(p.x,p.y);
-  const sk=skeletons[cur]; const fix=sk._fixed;
-  if(drag==='head'){ let a=Math.atan2(w.y-sk.neck.y, w.x-sk.neck.x); sk.head.x=sk.neck.x + Math.cos(a)*fix.neck_head; sk.head.y=sk.neck.y + Math.sin(a)*fix.neck_head; }
-  else if(drag==='l_sh'){ let a=Math.atan2(w.y-sk.chest.y, w.x-sk.chest.x); sk.l_sh.x=sk.chest.x + Math.cos(a)*fix.chest_l_sh; sk.l_sh.y=sk.chest.y + Math.sin(a)*fix.chest_l_sh; log('Hombro IZQ girando: '+(a*180/Math.PI).toFixed(0)+'°'); }
-  else if(drag==='r_sh'){ let a=Math.atan2(w.y-sk.chest.y, w.x-sk.chest.x); sk.r_sh.x=sk.chest.x + Math.cos(a)*fix.chest_r_sh; sk.r_sh.y=sk.chest.y + Math.sin(a)*fix.chest_r_sh; log('Hombro DER girando'); }
-  else if(drag==='l_hip'){ let a=Math.atan2(w.y-sk.hips.y, w.x-sk.hips.x); sk.l_hip.x=sk.hips.x + Math.cos(a)*fix.hips_l_hip; sk.l_hip.y=sk.hips.y + Math.sin(a)*fix.hips_l_hip; log('Cadera IZQ girando'); }
-  else if(drag==='r_hip'){ let a=Math.atan2(w.y-sk.hips.y, w.x-sk.hips.x); sk.r_hip.x=sk.hips.x + Math.cos(a)*fix.hips_r_hip; sk.r_hip.y=sk.hips.y + Math.sin(a)*fix.hips_r_hip; log('Cadera DER girando'); }
-  else if(drag==='l_ha'){solveLimb(sk.l_sh, sk.l_el, sk.l_ha, w, fix.l_up, fix.l_low);}
-  else if(drag==='r_ha'){solveLimb(sk.r_sh, sk.r_el, sk.r_ha, w, fix.r_up, fix.r_low);}
-  else if(drag==='l_ft'){solveLimb(sk.l_hip, sk.l_kn, sk.l_ft, w, fix.l_thigh, fix.l_shin);}
-  else if(drag==='r_ft'){solveLimb(sk.r_hip, sk.r_kn, sk.r_ft, w, fix.r_thigh, fix.r_shin);}
-  else if(drag==='l_el'){ let a=Math.atan2(w.y-sk.l_sh.y, w.x-sk.l_sh.x); sk.l_el.x=sk.l_sh.x + Math.cos(a)*fix.l_up; sk.l_el.y=sk.l_sh.y + Math.sin(a)*fix.l_up; let dirX=sk.l_ha.x-sk.l_el.x, dirY=sk.l_ha.y-sk.l_el.y; let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;} sk.l_ha.x=sk.l_el.x + (dirX/d)*fix.l_low; sk.l_ha.y=sk.l_el.y + (dirY/d)*fix.l_low; }
-  else if(drag==='r_el'){ let a=Math.atan2(w.y-sk.r_sh.y, w.x-sk.r_sh.x); sk.r_el.x=sk.r_sh.x + Math.cos(a)*fix.r_up; sk.r_el.y=sk.r_sh.y + Math.sin(a)*fix.r_up; let dirX=sk.r_ha.x-sk.r_el.x, dirY=sk.r_ha.y-sk.r_el.y; let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;} sk.r_ha.x=sk.r_el.x + (dirX/d)*fix.r_low; sk.r_ha.y=sk.r_el.y + (dirY/d)*fix.r_low; }
-  else if(drag==='l_kn'){ let a=Math.atan2(w.y-sk.l_hip.y, w.x-sk.l_hip.x); sk.l_kn.x=sk.l_hip.x + Math.cos(a)*fix.l_thigh; sk.l_kn.y=sk.l_hip.y + Math.sin(a)*fix.l_thigh; let dirX=sk.l_ft.x-sk.l_kn.x, dirY=sk.l_ft.y-sk.l_kn.y; let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;} sk.l_ft.x=sk.l_kn.x + (dirX/d)*fix.l_shin; sk.l_ft.y=sk.l_kn.y + (dirY/d)*fix.l_shin; }
-  else if(drag==='r_kn'){ let a=Math.atan2(w.y-sk.r_hip.y, w.x-sk.r_hip.x); sk.r_kn.x=sk.r_hip.x + Math.cos(a)*fix.r_thigh; sk.r_kn.y=sk.r_hip.y + Math.sin(a)*fix.r_thigh; let dirX=sk.r_ft.x-sk.r_kn.x, dirY=sk.r_ft.y-sk.r_kn.y; let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;} sk.r_ft.x=sk.r_kn.x + (dirX/d)*fix.r_shin; sk.r_ft.y=sk.r_kn.y + (dirY/d)*fix.r_shin; }
+  const sk=skeletons[cur]; const base=baseSkeletons[cur]; const fix=sk._fixed;
+  if(drag==='head'){ let a=Math.atan2(w.y-sk.neck.y, w.x-sk.neck.x); sk.head.x=sk.neck.x + Math.cos(a)*fix.neck_head; sk.head.y=sk.neck.y + Math.sin(a)*fix.neck_head; base.head.x=sk.head.x; base.head.y=sk.head.y;}
+  else if(drag==='l_sh'){ let a=Math.atan2(w.y-sk.chest.y, w.x-sk.chest.x); sk.l_sh.x=sk.chest.x + Math.cos(a)*fix.chest_l_sh; sk.l_sh.y=sk.chest.y + Math.sin(a)*fix.chest_l_sh; base.l_sh.x=sk.l_sh.x; base.l_sh.y=sk.l_sh.y;}
+  else if(drag==='r_sh'){ let a=Math.atan2(w.y-sk.chest.y, w.x-sk.chest.x); sk.r_sh.x=sk.chest.x + Math.cos(a)*fix.chest_r_sh; sk.r_sh.y=sk.chest.y + Math.sin(a)*fix.chest_r_sh; base.r_sh.x=sk.r_sh.x; base.r_sh.y=sk.r_sh.y;}
+  else if(drag==='l_hip'){ let a=Math.atan2(w.y-sk.hips.y, w.x-sk.hips.x); sk.l_hip.x=sk.hips.x + Math.cos(a)*fix.hips_l_hip; sk.l_hip.y=sk.hips.y + Math.sin(a)*fix.hips_l_hip; base.l_hip.x=sk.l_hip.x; base.l_hip.y=sk.l_hip.y;}
+  else if(drag==='r_hip'){ let a=Math.atan2(w.y-sk.hips.y, w.x-sk.hips.x); sk.r_hip.x=sk.hips.x + Math.cos(a)*fix.hips_r_hip; sk.r_hip.y=sk.hips.y + Math.sin(a)*fix.hips_r_hip; base.r_hip.x=sk.r_hip.x; base.r_hip.y=sk.r_hip.y;}
+  else if(drag==='l_ha'){solveLimb(sk.l_sh, sk.l_el, sk.l_ha, w, fix.l_up, fix.l_low); base.l_el.x=sk.l_el.x; base.l_el.y=sk.l_el.y; base.l_ha.x=sk.l_ha.x; base.l_ha.y=sk.l_ha.y;}
+  else if(drag==='r_ha'){solveLimb(sk.r_sh, sk.r_el, sk.r_ha, w, fix.r_up, fix.r_low); base.r_el.x=sk.r_el.x; base.r_el.y=sk.r_el.y; base.r_ha.x=sk.r_ha.x; base.r_ha.y=sk.r_ha.y;}
+  else if(drag==='l_ft'){solveLimb(sk.l_hip, sk.l_kn, sk.l_ft, w, fix.l_thigh, fix.l_shin); base.l_kn.x=sk.l_kn.x; base.l_kn.y=sk.l_kn.y; base.l_ft.x=sk.l_ft.x; base.l_ft.y=sk.l_ft.y;}
+  else if(drag==='r_ft'){solveLimb(sk.r_hip, sk.r_kn, sk.r_ft, w, fix.r_thigh, fix.r_shin); base.r_kn.x=sk.r_kn.x; base.r_kn.y=sk.r_kn.y; base.r_ft.x=sk.r_ft.x; base.r_ft.y=sk.r_ft.y;}
+  else if(drag==='l_el'){ let a=Math.atan2(w.y-sk.l_sh.y, w.x-sk.l_sh.x); sk.l_el.x=sk.l_sh.x + Math.cos(a)*fix.l_up; sk.l_el.y=sk.l_sh.y + Math.sin(a)*fix.l_up; let dirX=sk.l_ha.x-sk.l_el.x, dirY=sk.l_ha.y-sk.l_el.y; let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;} sk.l_ha.x=sk.l_el.x + (dirX/d)*fix.l_low; sk.l_ha.y=sk.l_el.y + (dirY/d)*fix.l_low; base.l_el.x=sk.l_el.x; base.l_el.y=sk.l_el.y; base.l_ha.x=sk.l_ha.x; base.l_ha.y=sk.l_ha.y;}
+  else if(drag==='r_el'){ let a=Math.atan2(w.y-sk.r_sh.y, w.x-sk.r_sh.x); sk.r_el.x=sk.r_sh.x + Math.cos(a)*fix.r_up; sk.r_el.y=sk.r_sh.y + Math.sin(a)*fix.r_up; let dirX=sk.r_ha.x-sk.r_el.x, dirY=sk.r_ha.y-sk.r_el.y; let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;} sk.r_ha.x=sk.r_el.x + (dirX/d)*fix.r_low; sk.r_ha.y=sk.r_el.y + (dirY/d)*fix.r_low; base.r_el.x=sk.r_el.x; base.r_el.y=sk.r_el.y; base.r_ha.x=sk.r_ha.x; base.r_ha.y=sk.r_ha.y;}
+  else if(drag==='l_kn'){ let a=Math.atan2(w.y-sk.l_hip.y, w.x-sk.l_hip.x); sk.l_kn.x=sk.l_hip.x + Math.cos(a)*fix.l_thigh; sk.l_kn.y=sk.l_hip.y + Math.sin(a)*fix.l_thigh; let dirX=sk.l_ft.x-sk.l_kn.x, dirY=sk.l_ft.y-sk.l_kn.y; let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;} sk.l_ft.x=sk.l_kn.x + (dirX/d)*fix.l_shin; sk.l_ft.y=sk.l_kn.y + (dirY/d)*fix.l_shin; base.l_kn.x=sk.l_kn.x; base.l_kn.y=sk.l_kn.y; base.l_ft.x=sk.l_ft.x; base.l_ft.y=sk.l_ft.y;}
+  else if(drag==='r_kn'){ let a=Math.atan2(w.y-sk.r_hip.y, w.x-sk.r_hip.x); sk.r_kn.x=sk.r_hip.x + Math.cos(a)*fix.r_thigh; sk.r_kn.y=sk.r_hip.y + Math.sin(a)*fix.r_thigh; let dirX=sk.r_ft.x-sk.r_kn.x, dirY=sk.r_ft.y-sk.r_kn.y; let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;} sk.r_ft.x=sk.r_kn.x + (dirX/d)*fix.r_shin; sk.r_ft.y=sk.r_kn.y + (dirY/d)*fix.r_shin; base.r_kn.x=sk.r_kn.x; base.r_kn.y=sk.r_kn.y; base.r_ft.x=sk.r_ft.x; base.r_ft.y=sk.r_ft.y;}
   draw();
 }
 function endDrag(e){ drag=null; lastDist=0; if(e && e.changedTouches && e.changedTouches.length===0){ let now=Date.now(); if(now-lastTap<300){ setZoom(1); } lastTap=now; } else if(!e.changedTouches){ setZoom(zoomLevel); } }
@@ -247,35 +279,57 @@ function draw(){
 }
 function applyPreset(type){
   if(!frames[cur]) return;
-  const sk=skeletons[cur]; const b=frames[cur].b;
+  const sk=skeletons[cur]; const base=baseSkeletons[cur]; const b=frames[cur].b;
   if(type==='idle'){ sk.l_sh.x=b.x+b.w*0.40; sk.l_el.x=b.x+b.w*0.32; sk.l_el.y=b.y+b.h*0.55; sk.l_ha.x=b.x+b.w*0.28; sk.l_ha.y=b.y+b.h*0.66; sk.r_sh.x=b.x+b.w*0.60; sk.r_el.x=b.x+b.w*0.68; sk.r_el.y=b.y+b.h*0.55; sk.r_ha.x=b.x+b.w*0.72; sk.r_ha.y=b.y+b.h*0.66; }
   else if(type==='walk'){ sk.l_kn.x=b.x+b.w*0.32; sk.l_kn.y=b.y+b.h*0.78; sk.l_ft.x=b.x+b.w*0.22; sk.l_ft.y=b.y+b.h*0.94; sk.r_kn.x=b.x+b.w*0.68; sk.r_kn.y=b.y+b.h*0.82; sk.r_ft.x=b.x+b.w*0.78; sk.r_ft.y=b.y+b.h*0.95; }
   else if(type==='fight'){ sk.l_el.x=b.x+b.w*0.32; sk.l_el.y=b.y+b.h*0.47; sk.l_ha.x=b.x+b.w*0.34; sk.l_ha.y=b.y+b.h*0.53; sk.r_el.x=b.x+b.w*0.68; sk.r_el.y=b.y+b.h*0.49; sk.r_ha.x=b.x+b.w*0.64; sk.r_ha.y=b.y+b.h*0.55; sk.l_kn.x=b.x+b.w*0.34; sk.l_kn.y=b.y+b.h*0.76; sk.l_ft.x=b.x+b.w*0.26; sk.l_ft.y=b.y+b.h*0.93; sk.r_kn.x=b.x+b.w*0.66; sk.r_kn.y=b.y+b.h*0.80; sk.r_ft.x=b.x+b.w*0.76; sk.r_ft.y=b.y+b.h*0.94; }
-  draw();
+  for(let k in sk){ if(k.startsWith('_')) continue; base[k].x=sk[k].x; base[k].y=sk[k].y; }
+  applyGlobalRot();
 }
 function renderGreenStrip(){
-  greenC.width=2048; greenC.height=512; gctx.fillStyle='#00c800'; gctx.fillRect(0,0,2048,512);
+  greenC.width=2048; greenC.height=512; 
+  gctx.fillStyle='#00c800'; 
+  gctx.fillRect(0,0,2048,512);
   for(let dir=0; dir<4; dir++){
-    let sk=skeletons[dir]; if(!sk) continue; let offX=dir*512;
-    function w2s(p){ return {x: offX + (p.x/frames[dir].w)*512, y: (p.y/frames[dir].h)*512}; }
-    function seg(a,b,thick,col){let A=w2s(a), B=w2s(b); let len=Math.hypot(B.x-A.x,B.y-A.y), ang=Math.atan2(B.y-A.y,B.x-A.x); gctx.save(); gctx.translate(A.x,A.y); gctx.rotate(ang); gctx.fillStyle=col; gctx.beginPath(); gctx.roundRect(0,-thick/2,len,thick,thick/2); gctx.fill(); gctx.restore();}
+    let sk=skeletons[dir]; 
+    let f=frames[dir]; 
+    if(!sk || !f) continue; 
+    let offX=dir*512;
+    let s=Math.min((512*0.68)/f.w, (512*0.62)/f.h);
+    let vw=f.w*s, vh=f.h*s;
+    let ox=offX + (512 - vw)/2;
+    let oy=(512 - vh)/2 - 512*0.06;
+    function w2s(p){ return {x: ox + (p.x/f.w)*vw, y: oy + (p.y/f.h)*vh}; }
+    function seg(a,b,thick,col){
+      let A=w2s(a), B=w2s(b); 
+      let len=Math.hypot(B.x-A.x,B.y-A.y), ang=Math.atan2(B.y-A.y,B.x-A.x); 
+      gctx.save(); gctx.translate(A.x,A.y); gctx.rotate(ang); 
+      gctx.fillStyle=col; gctx.beginPath(); gctx.roundRect(0,-thick/2,len,thick,thick/2); gctx.fill(); 
+      gctx.restore();
+    }
     let white='#e8e8e8';
-    seg(sk.hips, sk.spine, 22, white); seg(sk.spine, sk.chest, 28, white); seg(sk.chest, sk.neck, 18, '#ffeb7a'); seg(sk.neck, sk.head, 32, white);
-    seg(sk.l_sh, sk.l_el, 16, white); seg(sk.l_el, sk.l_ha, 14, white);
-    seg(sk.r_sh, sk.r_el, 16, white); seg(sk.r_el, sk.r_ha, 14, white);
-    seg(sk.l_hip, sk.l_kn, 20, white); seg(sk.l_kn, sk.l_ft, 18, white);
-    seg(sk.r_hip, sk.r_kn, 20, white); seg(sk.r_kn, sk.r_ft, 18, white);
+    seg(sk.hips, sk.spine, vw*0.085, white); 
+    seg(sk.spine, sk.chest, vw*0.10, white); 
+    seg(sk.chest, sk.neck, vw*0.065, '#ffeb7a'); 
+    seg(sk.neck, sk.head, vw*0.11, white);
+    seg(sk.l_sh, sk.l_el, vw*0.060, white); seg(sk.l_el, sk.l_ha, vw*0.050, white);
+    seg(sk.r_sh, sk.r_el, vw*0.060, white); seg(sk.r_el, sk.r_ha, vw*0.050, white);
+    seg(sk.l_hip, sk.l_kn, vw*0.070, white); seg(sk.l_kn, sk.l_ft, vw*0.060, white);
+    seg(sk.r_hip, sk.r_kn, vw*0.070, white); seg(sk.r_kn, sk.r_ft, vw*0.060, white);
   }
 }
 document.getElementById('file').addEventListener('change',e=>{const file=e.target.files[0]; if(!file) return; const url=URL.createObjectURL(file); srcImg=new Image(); srcImg.onload=()=>{slice();}; srcImg.src=url;});
-document.getElementById('autoBone').onclick=()=>{if(!frames[cur]) return; skeletons[cur]=createRigidSkeleton(frames[cur].b,cur); draw();};
-document.getElementById('btnReset').onclick=()=>{if(!frames[cur]) return; skeletons[cur]=createRigidSkeleton(frames[cur].b,cur); draw();};
-document.getElementById('btnIdle').onclick=()=>{for(let i=0;i<4;i++) skeletons[i]=createRigidSkeleton(frames[i].b,i); cur=0; buildThumbs(); draw();};
+document.getElementById('autoBone').onclick=()=>{if(!frames[cur]) return; skeletons[cur]=createRigidSkeleton(frames[cur].b,cur); baseSkeletons[cur]=JSON.parse(JSON.stringify(skeletons[cur])); draw();};
+document.getElementById('btnReset').onclick=()=>{if(!frames[cur]) return; skeletons[cur]=createRigidSkeleton(frames[cur].b,cur); baseSkeletons[cur]=JSON.parse(JSON.stringify(skeletons[cur])); applyGlobalRot();};
+document.getElementById('btnIdle').onclick=()=>{for(let i=0;i<4;i++){skeletons[i]=createRigidSkeleton(frames[i].b,i); baseSkeletons[i]=JSON.parse(JSON.stringify(skeletons[i]));} cur=0; buildThumbs(); applyGlobalRot();};
 document.getElementById('btnIdlePose').onclick=()=>{applyPreset('idle');};
 document.getElementById('btnWalkPose').onclick=()=>{applyPreset('walk');};
 document.getElementById('btnFightPose').onclick=()=>{applyPreset('fight');};
-document.getElementById('btnCopy').onclick=()=>{if(!frames[cur]) return; let base=skeletons[cur]; for(let i=0;i<4;i++){ if(i===cur) continue; let nb=frames[i].b, ob=frames[cur].b; function mapP(p){ let rx=(p.x-ob.x)/ob.w, ry=(p.y-ob.y)/ob.h; return {x: nb.x+rx*nb.w, y: nb.y+ry*nb.h}; } let ns={}; for(let k in base){ if(k.startsWith('_')) continue; ns[k]=mapP(base[k]); } ns._fixed=base._fixed; skeletons[i]=ns; } draw();};
+document.getElementById('btnCopy').onclick=()=>{if(!frames[cur]) return; let base=skeletons[cur]; let base0=baseSkeletons[cur]; for(let i=0;i<4;i++){ if(i===cur) continue; let nb=frames[i].b, ob=frames[cur].b; function mapP(p){ let rx=(p.x-ob.x)/ob.w, ry=(p.y-ob.y)/ob.h; return {x: nb.x+rx*nb.w, y: nb.y+ry*nb.h}; } let ns={}; let ns0={}; for(let k in base){ if(k.startsWith('_')) continue; ns[k]=mapP(base[k]); ns0[k]=mapP(base0[k]); } ns._fixed=base._fixed; ns0._fixed=base0._fixed; skeletons[i]=ns; baseSkeletons[i]=ns0; } draw();};
 document.getElementById('btnZoomReset').onclick=()=>{setZoom(1);};
+document.getElementById('yaw').oninput=e=>{globalYaw=parseFloat(e.target.value); applyGlobalRot();};
+document.getElementById('pitch').oninput=e=>{globalPitch=parseFloat(e.target.value); applyGlobalRot();};
+document.getElementById('btnResetRot').onclick=()=>{globalYaw=0; globalPitch=0; document.getElementById('yaw').value=0; document.getElementById('pitch').value=0; applyGlobalRot();};
 document.getElementById('export').onclick=()=>{ectx.clearRect(0,0,8192,2048); frames.forEach((f,i)=>{ectx.drawImage(f.canvas,0,0,f.w,f.h,i*2048,0,2048,2048);}); const a=document.createElement('a'); a.download='original_8192.png'; a.href=exportC.toDataURL('image/png'); a.click();};
 document.getElementById('exportGreen').onclick=()=>{renderGreenStrip(); const a=document.createElement('a'); a.download='rigido_verde_4dir.png'; a.href=greenC.toDataURL('image/png'); a.click();};
 draw();
