@@ -3,44 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>RIGIDO FINAL - PNG CENTRO + SKIN + 4 DIR VERDE</title>
+<title>Editor RIGIDO - 3D + GIRO HOMBROS/CADERAS</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font-family:system-ui}
 #top{background:#111;padding:8px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #222}
-input{width:100%;background:#1e1e1e;color:#fff;padding:8px;border-radius:6px;border:1px solid #333;margin-top:4px}
+input{width:100%;background:#1e1e1e;color:#fff;padding:8px;border-radius:6px;border:1px solid #333}
 button{padding:11px;border-radius:8px;border:0;font-weight:700;margin-top:5px;width:100%}
 .primary{background:#00ff88;color:#000}.secondary{background:#7c5cff;color:#fff}.ghost{background:#222;color:#fff}
-#canvasBox{width:100%;height:60vh;background:#0a0a0a;display:flex;justify-content:center;align-items:center;touch-action:none;position:relative}
+#canvasBox{width:100%;height:62vh;background:#000;display:flex;justify-content:center;align-items:center;touch-action:none;position:relative}
 #c{max-width:100%;max-height:100%;touch-action:none}
 #thumbs{display:flex;gap:6px;padding:6px;background:#111;overflow-x:auto}
-.th{width:84px;height:84px;border:2px solid #333;border-radius:10px;overflow:hidden;position:relative;background:#000;flex-shrink:0}
-.th.active{border-color:#00ff88}.th span{position:absolute;bottom:0;left:0;right:0;background:#000c;font-size:9px;text-align:center;padding:2px}
+.th{width:70px;height:70px;border:2px solid #333;border-radius:10px;overflow:hidden;position:relative;background:#000;flex-shrink:0}
+.th.active{border-color:#00ff88}.th span{position:absolute;bottom:0;left:0;right:0;background:#000c;font-size:8px;text-align:center;padding:2px}
 #panel{padding:8px;background:#111}
 #status{background:#0a0a0a;padding:6px;border-radius:6px;font-size:11px;color:#00ff88;margin-bottom:5px;border:1px solid #1a1a1a}
 #zoomInfo{position:absolute;top:10px;right:10px;background:#000c;color:#00ff88;padding:4px 8px;border-radius:12px;font-size:11px;border:1px solid #00ff88}
-.rangeRow{display:flex;gap:6px;align-items:center;margin-top:6px} .rangeRow label{width:70px;font-size:11px} .rangeRow input[type=range]{flex:1}
 </style>
 </head>
 <body>
 <div id="top">
-<strong>RIGIDO FINAL - 1 PNG FRENTE + SKIN + 3D</strong>
-<label style="width:100%;font-size:11px;color:#0f8">1) Guia frente PNG transparente (sprite al centro):</label>
-<input type="file" id="file" accept="image/png,image/*">
-<label style="width:100%;font-size:11px;color:#ffeb7a">2) Skin textura PNG (femenina / hombre / orco Warcraft):</label>
-<input type="file" id="skinFile" accept="image/png,image/*">
-<div style="display:flex;gap:6px;width:100%"><button class="ghost" id="autoBone" style="width:50%">Auto calzar centro</button><button class="ghost" id="btnReset" style="width:50%">Reset T-Pose</button></div>
+<strong>RIGIDO - 3D + GIRO</strong>
+<input type="file" id="file" accept="image/*">
+<div style="display:flex;gap:6px;width:100%"><button class="ghost" id="autoBone" style="width:50%">Auto calzar</button><button class="ghost" id="btnReset" style="width:50%">Reset T-Pose</button></div>
 </div>
 <div id="canvasBox"><canvas id="c" width="1024" height="1024"></canvas><div id="zoomInfo">Zoom 1.0x</div></div>
 <div id="thumbs"></div>
 <div id="panel">
-<div id="status">Carga PNG frente centro - PNG detectado por alfa - 1 esqueleto maestro - Skin con textura</div>
+<div id="status">3D ON + hombros y caderas giran para direccion</div>
 <label><input type="checkbox" id="showBones" checked> Esqueleto 3D</label>
-<label><input type="checkbox" id="showFloor"> Piso 45°</label>
-<label><input type="checkbox" id="showSprite" checked> Guia 0.30</label>
-<label><input type="checkbox" id="showSkin" checked> Skin textura (no palitos)</label>
-<div class="rangeRow"><label>Skin X</label><input type="range" id="skinX" min="-200" max="200" value="0"><span id="skinXv">0</span></div>
-<div class="rangeRow"><label>Skin Y</label><input type="range" id="skinY" min="-200" max="200" value="0"><span id="skinYv">0</span></div>
-<div class="rangeRow"><label>Escala</label><input type="range" id="skinScale" min="0.5" max="2.5" step="0.01" value="1"><span id="skinScaleV">1.0</span></div>
+<label><input type="checkbox" id="showFloor" checked> Piso 45°</label>
+<label><input type="checkbox" id="showSprite" checked> Sprite base 0.15</label>
+<label style="color:#ffeb7a"><input type="checkbox" id="autoZoomReturn"> Zoom vuelve solo</label>
 <div style="display:flex;gap:5px">
 <button class="ghost" id="btnIdle" style="width:33%">T-Pose</button>
 <button class="ghost" id="btnIdlePose" style="width:33%">IDLE</button>
@@ -48,84 +41,51 @@ button{padding:11px;border-radius:8px;border:0;font-weight:700;margin-top:5px;wi
 </div>
 <button class="ghost" id="btnFightPose">PELEA</button>
 <div style="display:flex;gap:5px">
-<button class="ghost" id="btnCopy" style="width:50%">Copiar pose</button>
+<button class="ghost" id="btnCopy" style="width:50%">Copiar a 4 dirs</button>
 <button class="ghost" id="btnZoomReset" style="width:50%">Zoom 1x</button>
 </div>
-<button class="primary" id="exportGreen">EXPORTAR SKIN VERDE 2048x512 (como tus fotos)</button>
-<button class="secondary" id="exportGreenSkeleton">EXPORTAR PALITOS VERDE 2048x512</button>
-<button class="ghost" id="exportBlack">EXPORTAR NEGRO REFERENCIA 2048x512</button>
+<button class="primary" id="exportGreen">EXPORTAR VERDE 2048x512</button>
+<button class="secondary" id="export">EXPORTAR ORIGINAL 8192x2048</button>
 </div>
-<canvas id="exportC" width="2048" height="512" style="display:none"></canvas>
+<canvas id="exportC" width="8192" height="2048" style="display:none"></canvas>
 <canvas id="greenC" width="2048" height="512" style="display:none"></canvas>
 <script>
 const DIRS=['Front 0°','Front 45°','Side 90°','Back 135°'];
-const ANGLES=[0,45,90,135];
-let baseImg=new Image(), baseCanvas=null, baseBounds=null, masterSkeleton=null;
-let skinImg=new Image(), skinCanvas=null, skinReady=false;
-let skinOffset={x:0,y:0,scale:1};
-let cur=0, drag=null;
+let srcImg=new Image(), frames=[], skeletons=[], cur=0, drag=null;
 const c=document.getElementById('c'), ctx=c.getContext('2d');
 const exportC=document.getElementById('exportC'), ectx=exportC.getContext('2d');
 const greenC=document.getElementById('greenC'), gctx=greenC.getContext('2d');
-const statusEl=document.getElementById('status'), zoomInfo=document.getElementById('zoomInfo');
+const statusEl=document.getElementById('status');
+const zoomInfo=document.getElementById('zoomInfo');
 function log(m){statusEl.textContent=m;}
-function getBoundsPNG(canvas){
+function getBounds(canvas){
   const w=canvas.width,h=canvas.height;
   const d=canvas.getContext('2d').getImageData(0,0,w,h).data;
   let minX=w,minY=h,maxX=0,maxY=0,f=false;
-  for(let y=0;y<h;y+=2){for(let x=0;x<w;x+=2){let i=(y*w+x)*4; let a=d[i+3]; if(a>25){if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; f=true;}}}
-  if(!f) return {x:w*0.25,y:h*0.05,w:w*0.50,h:h*0.90};
-  let padW=(maxX-minX)*0.06, padH=(maxY-minY)*0.04;
-  return {x:Math.max(0,minX-padW), y:Math.max(0,minY-padH), w:Math.min(w,maxX+padW)-Math.max(0,minX-padW), h:Math.min(h,maxY+padH)-Math.max(0,minY-padH)};
+  for(let y=0;y<h;y+=3){for(let x=0;x<w;x+=3){let i=(y*w+x)*4; let r=d[i], g=d[i+1], b=d[i+2], a=d[i+3]; let br=r+g+b; if(a>20 && br>180){if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; f=true;}}}
+  if(!f) return {x:w*0.30,y:h*0.10,w:w*0.40,h:h*0.80};
+  let pad=(maxX-minX)*0.06;
+  return {x:Math.max(0,minX-pad), y:Math.max(0,minY-pad), w:Math.min(w,maxX+pad)-Math.max(0,minX-pad), h:Math.min(h,maxY+pad)-Math.max(0,minY-pad)};
 }
-function createMasterSkeleton(b){
+function createRigidSkeleton(b, dir){
   const x=b.x,y=b.y,w=b.w,h=b.h;
   const P=(rx,ry)=>({x:x+rx*w, y:y+ry*h});
-  let sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.50,0.30), head:P(0.50,0.15), l_sh:P(0.38,0.39), l_el:P(0.22,0.42), l_ha:P(0.10,0.45), r_sh:P(0.62,0.39), r_el:P(0.78,0.42), r_ha:P(0.90,0.45), l_hip:P(0.44,0.64), l_kn:P(0.39,0.81), l_ft:P(0.35,0.96), r_hip:P(0.56,0.64), r_kn:P(0.61,0.81), r_ft:P(0.65,0.96)};
+  let sk;
+  if(dir===0) sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.50,0.30), head:P(0.50,0.15), l_sh:P(0.38,0.39), l_el:P(0.22,0.42), l_ha:P(0.10,0.45), r_sh:P(0.62,0.39), r_el:P(0.78,0.42), r_ha:P(0.90,0.45), l_hip:P(0.44,0.64), l_kn:P(0.39,0.81), l_ft:P(0.35,0.96), r_hip:P(0.56,0.64), r_kn:P(0.61,0.81), r_ft:P(0.65,0.96)};
+  else if(dir===1) sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.51,0.30), head:P(0.52,0.15), l_sh:P(0.40,0.38), l_el:P(0.24,0.40), l_ha:P(0.12,0.42), r_sh:P(0.62,0.39), r_el:P(0.78,0.41), r_ha:P(0.88,0.43), l_hip:P(0.45,0.64), l_kn:P(0.41,0.81), l_ft:P(0.38,0.96), r_hip:P(0.55,0.64), r_kn:P(0.60,0.81), r_ft:P(0.63,0.96)};
+  else if(dir===2) sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.52,0.30), head:P(0.54,0.15), l_sh:P(0.48,0.38), l_el:P(0.58,0.39), l_ha:P(0.68,0.40), r_sh:P(0.52,0.38), r_el:P(0.42,0.39), r_ha:P(0.34,0.40), l_hip:P(0.50,0.64), l_kn:P(0.54,0.81), l_ft:P(0.56,0.96), r_hip:P(0.48,0.64), r_kn:P(0.46,0.81), r_ft:P(0.44,0.96)};
+  else sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.49,0.30), head:P(0.48,0.15), l_sh:P(0.40,0.38), l_el:P(0.26,0.40), l_ha:P(0.16,0.42), r_sh:P(0.60,0.39), r_el:P(0.72,0.40), r_ha:P(0.80,0.41), l_hip:P(0.45,0.64), l_kn:P(0.43,0.81), l_ft:P(0.41,0.96), r_hip:P(0.55,0.64), r_kn:P(0.57,0.81), r_ft:P(0.59,0.96)};
   function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
-  sk._fixed={l_up:dist(sk.l_sh,sk.l_el), l_low:dist(sk.l_el,sk.l_ha), r_up:dist(sk.r_sh,sk.r_el), r_low:dist(sk.r_el,sk.r_ha), l_thigh:dist(sk.l_hip,sk.l_kn), l_shin:dist(sk.l_kn,sk.l_ft), r_thigh:dist(sk.r_hip,sk.r_kn), r_shin:dist(sk.r_kn,sk.r_ft), chest_l_sh:dist(sk.chest,sk.l_sh), chest_r_sh:dist(sk.chest,sk.r_sh), hips_l_hip:dist(sk.hips,sk.l_hip), hips_r_hip:dist(sk.hips,sk.r_hip), chest_neck:dist(sk.chest,sk.neck), neck_head:dist(sk.neck,sk.head)};
-  sk._orig={l_sh:{dx:sk.l_sh.x-sk.chest.x}, r_sh:{dx:sk.r_sh.x-sk.chest.x}, l_hip:{dx:sk.l_hip.x-sk.hips.x}, r_hip:{dx:sk.r_hip.x-sk.hips.x}};
+  sk._fixed={hips_spine:dist(sk.hips,sk.spine), spine_chest:dist(sk.spine,sk.chest), chest_neck:dist(sk.chest,sk.neck), neck_head:dist(sk.neck,sk.head), chest_l_sh:dist(sk.chest,sk.l_sh), chest_r_sh:dist(sk.chest,sk.r_sh), hips_l_hip:dist(sk.hips,sk.l_hip), hips_r_hip:dist(sk.hips,sk.r_hip), l_up:dist(sk.l_sh,sk.l_el), l_low:dist(sk.l_el,sk.l_ha), r_up:dist(sk.r_sh,sk.r_el), r_low:dist(sk.r_el,sk.r_ha), l_thigh:dist(sk.l_hip,sk.l_kn), l_shin:dist(sk.l_kn,sk.l_ft), r_thigh:dist(sk.r_hip,sk.r_kn), r_shin:dist(sk.r_kn,sk.r_ft)};
   return sk;
 }
-function getRotatedSkeleton(base, angleDeg){
-  if(!base) return null;
-  let rad=angleDeg*Math.PI/180, cos=Math.cos(rad);
-  let sk={}; for(let k in base){ if(k.startsWith('_')) continue; sk[k]={x:base[k].x, y:base[k].y}; } sk._fixed=base._fixed; sk._orig=base._orig;
-  let chest=base.chest, hips=base.hips;
-  let dLSH=base._orig.l_sh.dx*cos, dRSH=base._orig.r_sh.dx*cos;
-  let dLH=base._orig.l_hip.dx*cos, dRH=base._orig.r_hip.dx*cos;
-  let n_l_sh={x:chest.x+dLSH, y:base.l_sh.y}, n_r_sh={x:chest.x+dRSH, y:base.r_sh.y};
-  let n_l_hip={x:hips.x+dLH, y:base.l_hip.y}, n_r_hip={x:hips.x+dRH, y:base.r_hip.y};
-  let deltaLS={x:n_l_sh.x-base.l_sh.x, y:0}, deltaRS={x:n_r_sh.x-base.r_sh.x, y:0}, deltaLH={x:n_l_hip.x-base.l_hip.x, y:0}, deltaRH={x:n_r_hip.x-base.r_hip.x, y:0};
-  sk.l_sh=n_l_sh; sk.r_sh=n_r_sh; sk.l_hip=n_l_hip; sk.r_hip=n_r_hip;
-  sk.l_el={x:base.l_el.x+deltaLS.x, y:base.l_el.y}; sk.l_ha={x:base.l_ha.x+deltaLS.x, y:base.l_ha.y};
-  sk.r_el={x:base.r_el.x+deltaRS.x, y:base.r_el.y}; sk.r_ha={x:base.r_ha.x+deltaRS.x, y:base.r_ha.y};
-  sk.l_kn={x:base.l_kn.x+deltaLH.x, y:base.l_kn.y}; sk.l_ft={x:base.l_ft.x+deltaLH.x, y:base.l_ft.y};
-  sk.r_kn={x:base.r_kn.x+deltaRH.x, y:base.r_kn.y}; sk.r_ft={x:base.r_ft.x+deltaRH.x, y:base.r_ft.y};
-  return sk;
+function slice(){
+  const cols=4, fw=srcImg.width/cols, fh=srcImg.height;
+  frames=[]; skeletons=[];
+  for(let i=0;i<cols;i++){const off=document.createElement('canvas'); off.width=fw; off.height=fh; off.getContext('2d').drawImage(srcImg,i*fw,0,fw,fh,0,0,fw,fh); const b=getBounds(off); frames.push({canvas:off,b:b,w:fw,h:fh}); skeletons.push(createRigidSkeleton(b,i));}
+  buildThumbs(); cur=0; draw(); log('3D + GIRO OK');
 }
-function buildThumbs(){
-  const cont=document.getElementById('thumbs'); cont.innerHTML='';
-  if(!masterSkeleton) return;
-  ANGLES.forEach((ang,i)=>{
-    const d=document.createElement('div'); d.className='th'+(i===cur?' active':'');
-    const mini=document.createElement('canvas'); mini.width=84; mini.height=84;
-    let mctx=mini.getContext('2d'); mctx.fillStyle='#000'; mctx.fillRect(0,0,84,84);
-    let sk=getRotatedSkeleton(masterSkeleton, ang);
-    if(skinReady && document.getElementById('showSkin').checked){
-      let cos=Math.cos(ang*Math.PI/180); let w=60*Math.abs(cos)*skinOffset.scale, h=70*skinOffset.scale;
-      let cx=42 + skinOffset.x*0.15, cy=42 + skinOffset.y*0.15;
-      mctx.globalAlpha=0.95; mctx.drawImage(skinCanvas,0,0,skinCanvas.width,skinCanvas.height,cx-w/2,cy-h/2,w,h);
-    } else {
-      function seg(a,b){ let sx=7+(a.x/baseCanvas.width)*70, sy=7+(a.y/baseCanvas.height)*70; let ex=7+(b.x/baseCanvas.width)*70, ey=7+(b.y/baseCanvas.height)*70; mctx.strokeStyle='#fff'; mctx.lineWidth=1.5; mctx.beginPath(); mctx.moveTo(sx,sy); mctx.lineTo(ex,ey); mctx.stroke(); }
-      seg(sk.hips,sk.spine); seg(sk.spine,sk.chest); seg(sk.l_sh,sk.l_el); seg(sk.l_el,sk.l_ha); seg(sk.r_sh,sk.r_el); seg(sk.r_el,sk.r_ha); seg(sk.l_hip,sk.l_kn); seg(sk.l_kn,sk.l_ft); seg(sk.r_hip,sk.r_kn); seg(sk.r_kn,sk.r_ft);
-    }
-    d.appendChild(mini);
-    const sp=document.createElement('span'); sp.textContent=DIRS[i]; d.appendChild(sp);
-    d.onclick=()=>{cur=i; buildThumbs(); draw();};
-    cont.appendChild(d);
-  });
-}
+function buildThumbs(){const cont=document.getElementById('thumbs'); cont.innerHTML=''; frames.forEach((f,i)=>{const d=document.createElement('div'); d.className='th'+(i===cur?' active':''); const mini=document.createElement('canvas'); mini.width=70; mini.height=70; mini.getContext('2d').drawImage(f.canvas,0,0,f.w,f.h,5,5,60,60); d.appendChild(mini); const sp=document.createElement('span'); sp.textContent=DIRS[i]; d.appendChild(sp); d.onclick=()=>{cur=i; buildThumbs(); draw();}; cont.appendChild(d);});}
 function solveLimb(shoulder, elbow, hand, target, lenUp, lenLow){
   let dx=target.x-shoulder.x, dy=target.y-shoulder.y; let d=Math.hypot(dx,dy); let maxD=lenUp+lenLow-1, minD=Math.abs(lenUp-lenLow)+1;
   if(d>maxD){d=maxD; let a=Math.atan2(dy,dx); target.x=shoulder.x+Math.cos(a)*d; target.y=shoulder.y+Math.sin(a)*d;}
@@ -133,146 +93,186 @@ function solveLimb(shoulder, elbow, hand, target, lenUp, lenLow){
   let a=Math.atan2(dy,dx); let cosA=(lenUp*lenUp + d*d - lenLow*lenLow)/(2*lenUp*d); cosA=Math.max(-1,Math.min(1,cosA)); let ang=Math.acos(cosA);
   elbow.x=shoulder.x + Math.cos(a+ang)*lenUp; elbow.y=shoulder.y + Math.sin(a+ang)*lenUp; hand.x=shoulder.x + Math.cos(a)*d; hand.y=shoulder.y + Math.sin(a)*d;
 }
-let view={ox:0,oy:0,w:0,h:0}, zoomLevel=1, lastDist=0;
+let view={ox:0,oy:0,w:0,h:0};
+let zoomLevel=1;
+let zoomTimeout=null;
+let lastDist=0;
+let lastTap=0;
 function calcView(){
-  if(!baseCanvas) return;
-  const s=Math.min((c.width*0.68)/baseCanvas.width, (c.height*0.60)/baseCanvas.height) * zoomLevel;
-  const w=baseCanvas.width*s, h=baseCanvas.height*s;
-  view={ox:(c.width-w)/2, oy:(c.height-h)/2 - c.height*0.05, w,h};
+  const f=frames[cur]; if(!f) return;
+  const s=Math.min((c.width*0.68)/f.w, (c.height*0.62)/f.h) * zoomLevel;
+  const w=f.w*s, h=f.h*s;
+  view={ox:(c.width-w)/2, oy:(c.height-h)/2 - c.height*0.06, w,h};
   zoomInfo.textContent='Zoom '+zoomLevel.toFixed(1)+'x';
 }
-function setZoom(z){ zoomLevel=Math.max(0.4,Math.min(3.5,z)); calcView(); draw(); }
-function worldToScreen(p){return {x: view.ox + (p.x/baseCanvas.width)*view.w, y: view.oy + (p.y/baseCanvas.height)*view.h};}
-function screenToWorld(sx,sy){return {x: ((sx-view.ox)/view.w)*baseCanvas.width, y: ((sy-view.oy)/view.h)*baseCanvas.height};}
+function setZoom(z){
+  zoomLevel=Math.max(0.4, Math.min(3.5, z));
+  calcView(); draw();
+  clearTimeout(zoomTimeout);
+  const autoReturn = document.getElementById('autoZoomReturn').checked;
+  if(!autoReturn) return;
+  if(drag) return;
+  if(Math.abs(zoomLevel-1)>0.02){
+    zoomTimeout=setTimeout(()=>{
+      if(drag) return;
+      let start=zoomLevel; let startTime=Date.now(); let duration=450;
+      function animateBack(){
+        if(drag) return;
+        let t=(Date.now()-startTime)/duration;
+        if(t>=1){zoomLevel=1; calcView(); draw(); return;}
+        let ease=1-Math.pow(1-t,3);
+        zoomLevel=start + (1-start)*ease;
+        calcView(); draw();
+        requestAnimationFrame(animateBack);
+      }
+      animateBack();
+    },2500);
+  }
+}
+function worldToScreen(p){return {x: view.ox + (p.x/frames[cur].w)*view.w, y: view.oy + (p.y/frames[cur].h)*view.h};}
+function screenToWorld(sx,sy){return {x: ((sx-view.ox)/view.w)*frames[cur].w, y: ((sy-view.oy)/view.h)*frames[cur].h};}
 function getPos(e){const r=c.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)*(c.width/r.width), y:(t.clientY-r.top)*(c.height/r.height)};}
 function findJoint(x,y){
-  if(!masterSkeleton) return null; let sk=masterSkeleton; let best=null,bestD=50;
-  for(let k in sk){ if(k.startsWith('_')) continue; if(['spine','chest','hips','neck'].includes(k)) continue; let p=worldToScreen(sk[k]); let d=Math.hypot(x-p.x,y-p.y); if(d<bestD){bestD=d; best=k;} }
+  const sk=skeletons[cur]; 
+  let best=null, bestD=48; 
+  for(let k in sk){ if(k.startsWith('_')) continue; if(['spine','chest','hips','neck'].includes(k)) continue; let p=sk[k]; let s=worldToScreen(p); let d=Math.hypot(x-s.x,y-s.y); if(d<bestD){bestD=d; best=k;} } 
   return best;
 }
-function startDrag(e){if(e.touches && e.touches.length===2) return; e.preventDefault(); calcView(); const p=getPos(e); const j=findJoint(p.x,p.y); if(j) drag=j;}
+function startDrag(e){if(e.touches && e.touches.length===2) return; e.preventDefault(); clearTimeout(zoomTimeout); calcView(); const p=getPos(e); const j=findJoint(p.x,p.y); if(j) drag=j;}
 function moveDrag(e){
-  if(!drag || !masterSkeleton) return; e.preventDefault();
+  if(e.touches && e.touches.length===2) return;
+  if(!drag) return; e.preventDefault();
   const p=getPos(e); const w=screenToWorld(p.x,p.y);
-  const sk=masterSkeleton, fix=sk._fixed;
-  if(drag==='l_ha')solveLimb(sk.l_sh, sk.l_el, sk.l_ha, w, fix.l_up, fix.l_low);
-  else if(drag==='r_ha')solveLimb(sk.r_sh, sk.r_el, sk.r_ha, w, fix.r_up, fix.r_low);
-  else if(drag==='l_ft')solveLimb(sk.l_hip, sk.l_kn, sk.l_ft, w, fix.l_thigh, fix.l_shin);
-  else if(drag==='r_ft')solveLimb(sk.r_hip, sk.r_kn, sk.r_ft, w, fix.r_thigh, fix.r_shin);
-  else if(drag==='head'){ let a=Math.atan2(w.y-sk.neck.y, w.x-sk.neck.x); sk.head.x=sk.neck.x + Math.cos(a)*fix.neck_head; sk.head.y=sk.neck.y + Math.sin(a)*fix.neck_head; }
-  else if(drag==='l_sh'){ let a=Math.atan2(w.y-sk.chest.y, w.x-sk.chest.x); sk.l_sh.x=sk.chest.x + Math.cos(a)*fix.chest_l_sh; sk.l_sh.y=sk.chest.y + Math.sin(a)*fix.chest_l_sh; sk._orig.l_sh.dx=sk.l_sh.x-sk.chest.x; }
-  else if(drag==='r_sh'){ let a=Math.atan2(w.y-sk.chest.y, w.x-sk.chest.x); sk.r_sh.x=sk.chest.x + Math.cos(a)*fix.chest_r_sh; sk.r_sh.y=sk.chest.y + Math.sin(a)*fix.chest_r_sh; sk._orig.r_sh.dx=sk.r_sh.x-sk.chest.x; }
-  buildThumbs(); draw();
+  const sk=skeletons[cur]; const fix=sk._fixed;
+  if(drag==='head'){ let a=Math.atan2(w.y-sk.neck.y, w.x-sk.neck.x); sk.head.x=sk.neck.x + Math.cos(a)*fix.neck_head; sk.head.y=sk.neck.y + Math.sin(a)*fix.neck_head; }
+  else if(drag==='l_sh'){ let a=Math.atan2(w.y-sk.chest.y, w.x-sk.chest.x); sk.l_sh.x=sk.chest.x + Math.cos(a)*fix.chest_l_sh; sk.l_sh.y=sk.chest.y + Math.sin(a)*fix.chest_l_sh; log('Hombro IZQ girando: '+(a*180/Math.PI).toFixed(0)+'°'); }
+  else if(drag==='r_sh'){ let a=Math.atan2(w.y-sk.chest.y, w.x-sk.chest.x); sk.r_sh.x=sk.chest.x + Math.cos(a)*fix.chest_r_sh; sk.r_sh.y=sk.chest.y + Math.sin(a)*fix.chest_r_sh; log('Hombro DER girando'); }
+  else if(drag==='l_hip'){ let a=Math.atan2(w.y-sk.hips.y, w.x-sk.hips.x); sk.l_hip.x=sk.hips.x + Math.cos(a)*fix.hips_l_hip; sk.l_hip.y=sk.hips.y + Math.sin(a)*fix.hips_l_hip; log('Cadera IZQ girando'); }
+  else if(drag==='r_hip'){ let a=Math.atan2(w.y-sk.hips.y, w.x-sk.hips.x); sk.r_hip.x=sk.hips.x + Math.cos(a)*fix.hips_r_hip; sk.r_hip.y=sk.hips.y + Math.sin(a)*fix.hips_r_hip; log('Cadera DER girando'); }
+  else if(drag==='l_ha'){solveLimb(sk.l_sh, sk.l_el, sk.l_ha, w, fix.l_up, fix.l_low);}
+  else if(drag==='r_ha'){solveLimb(sk.r_sh, sk.r_el, sk.r_ha, w, fix.r_up, fix.r_low);}
+  else if(drag==='l_ft'){solveLimb(sk.l_hip, sk.l_kn, sk.l_ft, w, fix.l_thigh, fix.l_shin);}
+  else if(drag==='r_ft'){solveLimb(sk.r_hip, sk.r_kn, sk.r_ft, w, fix.r_thigh, fix.r_shin);}
+  else if(drag==='l_el'){ let a=Math.atan2(w.y-sk.l_sh.y, w.x-sk.l_sh.x); sk.l_el.x=sk.l_sh.x + Math.cos(a)*fix.l_up; sk.l_el.y=sk.l_sh.y + Math.sin(a)*fix.l_up; let dirX=sk.l_ha.x-sk.l_el.x, dirY=sk.l_ha.y-sk.l_el.y; let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;} sk.l_ha.x=sk.l_el.x + (dirX/d)*fix.l_low; sk.l_ha.y=sk.l_el.y + (dirY/d)*fix.l_low; }
+  else if(drag==='r_el'){ let a=Math.atan2(w.y-sk.r_sh.y, w.x-sk.r_sh.x); sk.r_el.x=sk.r_sh.x + Math.cos(a)*fix.r_up; sk.r_el.y=sk.r_sh.y + Math.sin(a)*fix.r_up; let dirX=sk.r_ha.x-sk.r_el.x, dirY=sk.r_ha.y-sk.r_el.y; let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;} sk.r_ha.x=sk.r_el.x + (dirX/d)*fix.r_low; sk.r_ha.y=sk.r_el.y + (dirY/d)*fix.r_low; }
+  else if(drag==='l_kn'){ let a=Math.atan2(w.y-sk.l_hip.y, w.x-sk.l_hip.x); sk.l_kn.x=sk.l_hip.x + Math.cos(a)*fix.l_thigh; sk.l_kn.y=sk.l_hip.y + Math.sin(a)*fix.l_thigh; let dirX=sk.l_ft.x-sk.l_kn.x, dirY=sk.l_ft.y-sk.l_kn.y; let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;} sk.l_ft.x=sk.l_kn.x + (dirX/d)*fix.l_shin; sk.l_ft.y=sk.l_kn.y + (dirY/d)*fix.l_shin; }
+  else if(drag==='r_kn'){ let a=Math.atan2(w.y-sk.r_hip.y, w.x-sk.r_hip.x); sk.r_kn.x=sk.r_hip.x + Math.cos(a)*fix.r_thigh; sk.r_kn.y=sk.r_hip.y + Math.sin(a)*fix.r_thigh; let dirX=sk.r_ft.x-sk.r_kn.x, dirY=sk.r_ft.y-sk.r_kn.y; let d=Math.hypot(dirX,dirY); if(d<2){dirX=Math.cos(a); dirY=Math.sin(a); d=1;} sk.r_ft.x=sk.r_kn.x + (dirX/d)*fix.r_shin; sk.r_ft.y=sk.r_kn.y + (dirY/d)*fix.r_shin; }
+  draw();
 }
-function endDrag(){drag=null; lastDist=0;}
+function endDrag(e){ drag=null; lastDist=0; if(e && e.changedTouches && e.changedTouches.length===0){ let now=Date.now(); if(now-lastTap<300){ setZoom(1); } lastTap=now; } else if(!e.changedTouches){ setZoom(zoomLevel); } }
 c.addEventListener('mousedown',startDrag); window.addEventListener('mousemove',moveDrag); window.addEventListener('mouseup',endDrag);
-c.addEventListener('touchstart',(e)=>{ if(e.touches.length===2){ let dx=e.touches[0].clientX-e.touches[1].clientX; let dy=e.touches[0].clientY-e.touches[1].clientY; lastDist=Math.hypot(dx,dy);} else startDrag(e); },{passive:false});
-c.addEventListener('touchmove',(e)=>{ if(e.touches.length===2){ e.preventDefault(); let dx=e.touches[0].clientX-e.touches[1].clientX; let dy=e.touches[0].clientY-e.touches[1].clientY; let d=Math.hypot(dx,dy); if(lastDist>0) setZoom(zoomLevel*(d/lastDist)); lastDist=d;} else moveDrag(e); },{passive:false});
-c.addEventListener('touchend',endDrag,{passive:false});
-c.addEventListener('wheel',(e)=>{ e.preventDefault(); setZoom(zoomLevel*(e.deltaY>0?0.92:1.08)); },{passive:false});
-function draw3DJoint(pos,radius,color,scaleY){
-  ctx.save(); ctx.translate(pos.x,pos.y);
-  ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(1,2,radius*1.1,radius*1.1*scaleY,0,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle='#fff'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.ellipse(0,0,radius,radius*scaleY,0,0,Math.PI*2); ctx.stroke();
-  let grad=ctx.createRadialGradient(-radius*0.3,-radius*0.3*scaleY,radius*0.2,0,0,radius);
-  grad.addColorStop(0,'#fff'); grad.addColorStop(0.3,color); grad.addColorStop(1,'#000');
-  ctx.fillStyle=grad; ctx.beginPath(); ctx.ellipse(0,0,radius*0.85,radius*0.85*scaleY,0,0,Math.PI*2); ctx.fill();
+c.addEventListener('touchstart',(e)=>{ if(e.touches.length===2){ let dx=e.touches[0].clientX-e.touches[1].clientX; let dy=e.touches[0].clientY-e.touches[1].clientY; lastDist=Math.hypot(dx,dy); } else { startDrag(e); } },{passive:false});
+c.addEventListener('touchmove',(e)=>{ if(e.touches.length===2){ e.preventDefault(); let dx=e.touches[0].clientX-e.touches[1].clientX; let dy=e.touches[0].clientY-e.touches[1].clientY; let dist=Math.hypot(dx,dy); if(lastDist>0){ setZoom(zoomLevel*(dist/lastDist)); } lastDist=dist; } else { moveDrag(e); } },{passive:false});
+c.addEventListener('touchend', endDrag, {passive:false});
+c.addEventListener('wheel',(e)=>{ e.preventDefault(); let delta=e.deltaY>0?0.92:1.08; setZoom(zoomLevel*delta); },{passive:false});
+c.addEventListener('dblclick',()=>{setZoom(1);});
+
+function drawFloor(){
+  const W=c.width, H=c.height; const vx=W*0.5, vy=H*0.08, fy=H*0.70;
+  ctx.save(); ctx.strokeStyle='#00ff55'; ctx.lineWidth=1; ctx.globalAlpha=0.85;
+  for(let i=-20;i<=20;i++){let x=W*0.5 + i*(W*0.04); ctx.beginPath(); ctx.moveTo(x,H); ctx.lineTo(vx+i*1.2,vy); ctx.stroke();}
+  for(let j=0;j<26;j++){let t=j/26; let y=fy+Math.pow(t,1.7)*(H-fy); let l=W*0.5 + (-20*W*0.04)*(1-(y-vy)/(H-vy)*0.88); let r=W*0.5 + (20*W*0.04)*(1-(y-vy)/(H-vy)*0.88); ctx.globalAlpha=0.15+t*0.45; ctx.beginPath(); ctx.moveTo(l,y); ctx.lineTo(r,y); ctx.stroke();}
+  ctx.globalAlpha=1; ctx.fillStyle='#ff3333'; ctx.font='bold 13px monospace'; ctx.fillText('0°', vx-10, vy+16);
+  ctx.strokeStyle='#00ff00'; ctx.lineWidth=2; ctx.globalAlpha=0.75; ctx.strokeRect(W*0.06, vy-8, W*0.88, H*0.80); ctx.restore();
+}
+
+// NUEVA FUNCION 3D CIRCULOS
+function draw3DJoint(screenPos, radius, color, type){
+  const scaleY = cur===2 ? 0.45 : cur===1 || cur===3 ? 0.75 : 1.0;
+  ctx.save();
+  ctx.translate(screenPos.x, screenPos.y);
+  // sombra
+  ctx.fillStyle='rgba(0,0,0,0.4)';
+  ctx.beginPath(); ctx.ellipse(1,2, radius*1.1, radius*1.1*scaleY, 0, 0, Math.PI*2); ctx.fill();
+  // anillo exterior 3D
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.ellipse(0,0, radius, radius*scaleY, 0, 0, Math.PI*2); ctx.stroke();
+  // relleno con gradiente
+  let grad = ctx.createRadialGradient(-radius*0.3, -radius*0.3*scaleY, radius*0.2, 0,0, radius);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(0.3, color);
+  grad.addColorStop(1, '#000000');
+  ctx.fillStyle=grad;
+  ctx.beginPath(); ctx.ellipse(0,0, radius*0.85, radius*0.85*scaleY, 0, 0, Math.PI*2); ctx.fill();
+  // brillito
+  ctx.fillStyle='rgba(255,255,255,0.8)';
+  ctx.beginPath(); ctx.ellipse(-radius*0.25, -radius*0.25*scaleY, radius*0.25, radius*0.25*scaleY, 0,0,Math.PI*2); ctx.fill();
+  // anillo de seleccion si es cadera/hombro
+  if(type==='shoulder' || type==='hip'){
+    ctx.strokeStyle= type==='shoulder' ? '#ffeb7a' : '#7c5cff';
+    ctx.lineWidth=1; ctx.globalAlpha=0.6; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.ellipse(0,0, radius*1.6, radius*1.6*scaleY, 0,0,Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
   ctx.restore();
 }
+
 function draw(){
-  if(!baseCanvas){ctx.fillStyle='#000'; ctx.fillRect(0,0,c.width,c.height); return;}
+  if(!frames[cur]){ctx.fillStyle='#000'; ctx.fillRect(0,0,c.width,c.height); if(document.getElementById('showFloor').checked) drawFloor(); return;}
   calcView(); ctx.fillStyle='#000'; ctx.fillRect(0,0,c.width,c.height);
-  let angle=ANGLES[cur], rad=angle*Math.PI/180, cos=Math.cos(rad), scaleY= angle===90?0.45: angle===45||angle===135?0.75:1.0;
-  let skDisplay=getRotatedSkeleton(masterSkeleton, angle);
+  if(document.getElementById('showFloor').checked) drawFloor();
+  const sk=skeletons[cur]; const f=frames[cur];
   function seg(a,b,thick,color){const A=worldToScreen(a), B=worldToScreen(b); const len=Math.hypot(B.x-A.x,B.y-A.y), ang=Math.atan2(B.y-A.y,B.x-A.x); ctx.save(); ctx.translate(A.x,A.y); ctx.rotate(ang); ctx.fillStyle=color; ctx.beginPath(); ctx.roundRect(0,-thick/2,len,thick,thick/2); ctx.fill(); ctx.restore();}
-  if(document.getElementById('showSprite').checked){ctx.globalAlpha=0.30; ctx.drawImage(baseCanvas,0,0,baseCanvas.width,baseCanvas.height,view.ox,view.oy,view.w,view.h); ctx.globalAlpha=1;}
-  if(skinReady && document.getElementById('showSkin').checked){
-    let baseW=view.w*skinOffset.scale, baseH=view.h*skinOffset.scale;
-    let w=baseW*Math.max(0.35, Math.abs(cos)), h=baseH;
-    let chestS=worldToScreen(skDisplay.chest);
-    let cx=chestS.x + skinOffset.x*view.w*0.0015*500, cy=chestS.y + skinOffset.y*view.h*0.0015*500 + view.h*0.25;
-    ctx.save(); ctx.globalAlpha=0.98; ctx.drawImage(skinCanvas,0,0,skinCanvas.width,skinCanvas.height,cx-w/2,cy-h/2,w,h); ctx.restore();
-  }
+  if(document.getElementById('showSprite').checked){ctx.globalAlpha=0.15; ctx.drawImage(f.canvas,0,0,f.w,f.h,view.ox,view.oy,view.w,view.h); ctx.globalAlpha=1;}
+  const white='#e8e8e8', spineCol='#ffffff', neckCol='#ffeb7a';
+  seg(sk.hips, sk.spine, view.w*0.085, spineCol); seg(sk.spine, sk.chest, view.w*0.10, spineCol); seg(sk.chest, sk.neck, view.w*0.065, neckCol); seg(sk.neck, sk.head, view.w*0.11, white);
+  seg(sk.l_sh, sk.l_el, view.w*0.060, white); seg(sk.l_el, sk.l_ha, view.w*0.050, white);
+  seg(sk.r_sh, sk.r_el, view.w*0.060, white); seg(sk.r_el, sk.r_ha, view.w*0.050, white);
+  seg(sk.l_hip, sk.l_kn, view.w*0.070, white); seg(sk.l_kn, sk.l_ft, view.w*0.060, white);
+  seg(sk.r_hip, sk.r_kn, view.w*0.070, white); seg(sk.r_kn, sk.r_ft, view.w*0.060, white);
+  seg(sk.chest, sk.l_sh, view.w*0.04, '#ffeb7a'); seg(sk.chest, sk.r_sh, view.w*0.04, '#ffeb7a');
+  seg(sk.hips, sk.l_hip, view.w*0.04, '#7c5cff'); seg(sk.hips, sk.r_hip, view.w*0.04, '#7c5cff');
   if(document.getElementById('showBones').checked){
-    seg(skDisplay.hips, skDisplay.spine, view.w*0.085, '#fff'); seg(skDisplay.spine, skDisplay.chest, view.w*0.10, '#fff');
-    seg(skDisplay.l_sh, skDisplay.l_el, view.w*0.060, '#e8e8e8'); seg(skDisplay.l_el, skDisplay.l_ha, view.w*0.050, '#e8e8e8');
-    seg(skDisplay.r_sh, skDisplay.r_el, view.w*0.060, '#e8e8e8'); seg(skDisplay.r_el, skDisplay.r_ha, view.w*0.050, '#e8e8e8');
-    seg(skDisplay.l_hip, skDisplay.l_kn, view.w*0.070, '#e8e8e8'); seg(skDisplay.l_kn, skDisplay.l_ft, view.w*0.060, '#e8e8e8');
-    seg(skDisplay.r_hip, skDisplay.r_kn, view.w*0.070, '#e8e8e8'); seg(skDisplay.r_kn, skDisplay.r_ft, view.w*0.060, '#e8e8e8');
-    for(let k in skDisplay){ if(k.startsWith('_')) continue;
-      let p=worldToScreen(skDisplay[k]); let col=k.includes('ha')||k.includes('ft')?'#ff4a6a':k.includes('_sh')?'#ffeb7a':k.includes('_hip')?'#7c5cff':'#6cf2ff';
-      draw3DJoint(p, k.includes('_sh')||k.includes('_hip')?9:7, col, scaleY);
+    for(let k in sk){ if(k.startsWith('_')) continue;
+      const p=worldToScreen(sk[k]);
+      let isRed=k.includes('ha')||k.includes('ft');
+      let isShoulder=k.includes('_sh');
+      let isHip=k.includes('_hip');
+      let col=isRed?'#ff4a6a':isShoulder?'#ffeb7a':isHip?'#7c5cff':k==='head'?'#ffffff':'#6cf2ff';
+      let rad= isShoulder||isHip ? 9 : isRed ? 7 : 6;
+      let type= isShoulder ? 'shoulder' : isHip ? 'hip' : 'joint';
+      draw3DJoint(p, rad, col, type);
     }
+    // dibuja centros de giro
+    const chestS=worldToScreen(sk.chest);
+    const hipsS=worldToScreen(sk.hips);
+    ctx.save(); ctx.fillStyle='#ffeb7a'; ctx.globalAlpha=0.3; ctx.beginPath(); ctx.arc(chestS.x,chestS.y,18,0,Math.PI*2); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.fillStyle='#7c5cff'; ctx.globalAlpha=0.3; ctx.beginPath(); ctx.arc(hipsS.x,hipsS.y,18,0,Math.PI*2); ctx.fill(); ctx.restore();
   }
-  ctx.fillStyle='#00ff88'; ctx.font='bold 13px monospace'; ctx.fillText(DIRS[cur]+' | skin '+skinOffset.x+','+skinOffset.y+' scale '+skinOffset.scale.toFixed(2), 10, 20);
 }
 function applyPreset(type){
-  if(!masterSkeleton||!baseBounds) return; let b=baseBounds, sk=masterSkeleton;
+  if(!frames[cur]) return;
+  const sk=skeletons[cur]; const b=frames[cur].b;
   if(type==='idle'){ sk.l_sh.x=b.x+b.w*0.40; sk.l_el.x=b.x+b.w*0.32; sk.l_el.y=b.y+b.h*0.55; sk.l_ha.x=b.x+b.w*0.28; sk.l_ha.y=b.y+b.h*0.66; sk.r_sh.x=b.x+b.w*0.60; sk.r_el.x=b.x+b.w*0.68; sk.r_el.y=b.y+b.h*0.55; sk.r_ha.x=b.x+b.w*0.72; sk.r_ha.y=b.y+b.h*0.66; }
   else if(type==='walk'){ sk.l_kn.x=b.x+b.w*0.32; sk.l_kn.y=b.y+b.h*0.78; sk.l_ft.x=b.x+b.w*0.22; sk.l_ft.y=b.y+b.h*0.94; sk.r_kn.x=b.x+b.w*0.68; sk.r_kn.y=b.y+b.h*0.82; sk.r_ft.x=b.x+b.w*0.78; sk.r_ft.y=b.y+b.h*0.95; }
-  else if(type==='fight'){ sk.l_el.x=b.x+b.w*0.32; sk.l_el.y=b.y+b.h*0.47; sk.l_ha.x=b.x+b.w*0.34; sk.l_ha.y=b.y+b.h*0.53; sk.r_el.x=b.x+b.w*0.68; sk.r_el.y=b.y+b.h*0.49; sk.r_ha.x=b.x+b.w*0.64; sk.r_ha.y=b.y+b.h*0.55; }
-  sk._orig.l_sh.dx=sk.l_sh.x-sk.chest.x; sk._orig.r_sh.dx=sk.r_sh.x-sk.chest.x; sk._orig.l_hip.dx=sk.l_hip.x-sk.hips.x; sk._orig.r_hip.dx=sk.r_hip.x-sk.hips.x;
-  buildThumbs(); draw();
+  else if(type==='fight'){ sk.l_el.x=b.x+b.w*0.32; sk.l_el.y=b.y+b.h*0.47; sk.l_ha.x=b.x+b.w*0.34; sk.l_ha.y=b.y+b.h*0.53; sk.r_el.x=b.x+b.w*0.68; sk.r_el.y=b.y+b.h*0.49; sk.r_ha.x=b.x+b.w*0.64; sk.r_ha.y=b.y+b.h*0.55; sk.l_kn.x=b.x+b.w*0.34; sk.l_kn.y=b.y+b.h*0.76; sk.l_ft.x=b.x+b.w*0.26; sk.l_ft.y=b.y+b.h*0.93; sk.r_kn.x=b.x+b.w*0.66; sk.r_kn.y=b.y+b.h*0.80; sk.r_ft.x=b.x+b.w*0.76; sk.r_ft.y=b.y+b.h*0.94; }
+  draw();
 }
-function renderExport(mode){
-  const W=2048,H=512,colW=512;
-  greenC.width=W; greenC.height=H; exportC.width=W; exportC.height=H;
-  let ctxG=mode==='green'?gctx:ectx;
-  if(mode==='green'){ ctxG.fillStyle='#00c800'; ctxG.fillRect(0,0,W,H); } else { ctxG.fillStyle='#000'; ctxG.fillRect(0,0,W,H); }
-  if(!masterSkeleton) return;
-  for(let dir=0;dir<4;dir++){
-    let ang=ANGLES[dir], cos=Math.cos(ang*Math.PI/180), offX=dir*colW;
-    let sk=getRotatedSkeleton(masterSkeleton, ang);
-    if(mode.includes('skin') && skinReady){
-      let w=colW*0.85*Math.max(0.35, Math.abs(cos))*skinOffset.scale;
-      let h=H*0.90*skinOffset.scale;
-      let cx=offX+colW/2 + skinOffset.x*1.2, cy=H/2 + skinOffset.y*1.2 + H*0.05;
-      ctxG.drawImage(skinCanvas,0,0,skinCanvas.width,skinCanvas.height,cx-w/2,cy-h/2,w,h);
-    } else {
-      function w2s(p){return {x:offX+(p.x/baseCanvas.width)*colW, y:(p.y/baseCanvas.height)*H};}
-      function seg(a,b,thick,col){let A=w2s(a),B=w2s(b); let len=Math.hypot(B.x-A.x,B.y-A.y), an=Math.atan2(B.y-A.y,B.x-A.x); ctxG.save(); ctxG.translate(A.x,A.y); ctxG.rotate(an); ctxG.fillStyle=col; ctxG.beginPath(); ctxG.roundRect(0,-thick/2,len,thick,thick/2); ctxG.fill(); ctxG.restore();}
-      let white='#e8e8e8'; seg(sk.hips,sk.spine,22,white); seg(sk.spine,sk.chest,28,white); seg(sk.chest,sk.neck,18,'#ffeb7a'); seg(sk.neck,sk.head,32,white);
-      seg(sk.l_sh,sk.l_el,16,white); seg(sk.l_el,sk.l_ha,14,white); seg(sk.r_sh,sk.r_el,16,white); seg(sk.r_el,sk.r_ha,14,white);
-      seg(sk.l_hip,sk.l_kn,20,white); seg(sk.l_kn,sk.l_ft,18,white); seg(sk.r_hip,sk.r_kn,20,white); seg(sk.r_kn,sk.r_ft,18,white);
-    }
+function renderGreenStrip(){
+  greenC.width=2048; greenC.height=512; gctx.fillStyle='#00c800'; gctx.fillRect(0,0,2048,512);
+  for(let dir=0; dir<4; dir++){
+    let sk=skeletons[dir]; if(!sk) continue; let offX=dir*512;
+    function w2s(p){ return {x: offX + (p.x/frames[dir].w)*512, y: (p.y/frames[dir].h)*512}; }
+    function seg(a,b,thick,col){let A=w2s(a), B=w2s(b); let len=Math.hypot(B.x-A.x,B.y-A.y), ang=Math.atan2(B.y-A.y,B.x-A.x); gctx.save(); gctx.translate(A.x,A.y); gctx.rotate(ang); gctx.fillStyle=col; gctx.beginPath(); gctx.roundRect(0,-thick/2,len,thick,thick/2); gctx.fill(); gctx.restore();}
+    let white='#e8e8e8';
+    seg(sk.hips, sk.spine, 22, white); seg(sk.spine, sk.chest, 28, white); seg(sk.chest, sk.neck, 18, '#ffeb7a'); seg(sk.neck, sk.head, 32, white);
+    seg(sk.l_sh, sk.l_el, 16, white); seg(sk.l_el, sk.l_ha, 14, white);
+    seg(sk.r_sh, sk.r_el, 16, white); seg(sk.r_el, sk.r_ha, 14, white);
+    seg(sk.l_hip, sk.l_kn, 20, white); seg(sk.l_kn, sk.l_ft, 18, white);
+    seg(sk.r_hip, sk.r_kn, 20, white); seg(sk.r_kn, sk.r_ft, 18, white);
   }
 }
-document.getElementById('file').addEventListener('change',e=>{
-  const file=e.target.files[0]; if(!file) return; const url=URL.createObjectURL(file);
-  baseImg=new Image(); baseImg.onload=()=>{
-    baseCanvas=document.createElement('canvas'); baseCanvas.width=baseImg.width; baseCanvas.height=baseImg.height;
-    baseCanvas.getContext('2d').drawImage(baseImg,0,0);
-    baseBounds=getBoundsPNG(baseCanvas); masterSkeleton=createMasterSkeleton(baseBounds);
-    cur=0; setZoom(1); buildThumbs(); draw(); log('Guia PNG centro OK - bounds '+(baseBounds.w|0)+'x'+(baseBounds.h|0)+' - maestro listo para femenina/hombre/orco');
-  }; baseImg.src=url;
-});
-document.getElementById('skinFile').addEventListener('change',e=>{
-  const file=e.target.files[0]; if(!file) return; const url=URL.createObjectURL(file);
-  skinImg=new Image(); skinImg.onload=()=>{
-    skinCanvas=document.createElement('canvas'); skinCanvas.width=skinImg.width; skinCanvas.height=skinImg.height;
-    skinCanvas.getContext('2d').drawImage(skinImg,0,0); skinReady=true; buildThumbs(); draw(); log('Skin textura cargada - movela con sliders X/Y/Escala para darle textura al personaje');
-  }; skinImg.src=url;
-});
-document.getElementById('skinX').addEventListener('input',e=>{skinOffset.x=parseInt(e.target.value); document.getElementById('skinXv').textContent=e.target.value; draw();});
-document.getElementById('skinY').addEventListener('input',e=>{skinOffset.y=parseInt(e.target.value); document.getElementById('skinYv').textContent=e.target.value; draw();});
-document.getElementById('skinScale').addEventListener('input',e=>{skinOffset.scale=parseFloat(e.target.value); document.getElementById('skinScaleV').textContent=parseFloat(e.target.value).toFixed(2); draw();});
-document.getElementById('autoBone').onclick=()=>{if(!baseCanvas) return; baseBounds=getBoundsPNG(baseCanvas); masterSkeleton=createMasterSkeleton(baseBounds); buildThumbs(); draw();};
-document.getElementById('btnReset').onclick=()=>{if(!baseCanvas) return; masterSkeleton=createMasterSkeleton(baseBounds); buildThumbs(); draw();};
-document.getElementById('btnIdle').onclick=()=>{if(!baseCanvas) return; masterSkeleton=createMasterSkeleton(baseBounds); cur=0; buildThumbs(); draw();};
-document.getElementById('btnIdlePose').onclick=()=>applyPreset('idle');
-document.getElementById('btnWalkPose').onclick=()=>applyPreset('walk');
-document.getElementById('btnFightPose').onclick=()=>applyPreset('fight');
-document.getElementById('btnCopy').onclick=()=>{log('Pose actual es maestro - ya se replica a las 4 dirs por giro 3D');};
-document.getElementById('btnZoomReset').onclick=()=>setZoom(1);
-document.getElementById('exportGreen').onclick=()=>{
-  if(!masterSkeleton){log('Carga guia primero');return;}
-  if(!skinReady){log('Carga skin para export con textura - usando palitos'); renderExport('skeleton_green');}
-  else {renderExport('skin_green');}
-  const a=document.createElement('a'); a.download='sprites_SKIN_VERDE_2048x512.png'; a.href=greenC.toDataURL('image/png'); a.click(); log('Export VERDE con skin como tus fotos - 4 dirs');
-};
-document.getElementById('exportGreenSkeleton').onclick=()=>{ renderExport('skeleton_green'); const a=document.createElement('a'); a.download='rigido_palitos_verde.png'; a.href=greenC.toDataURL('image/png'); a.click(); };
-document.getElementById('exportBlack').onclick=()=>{ renderExport('skeleton_black'); const a=document.createElement('a'); a.download='rigido_negro_2048.png'; a.href=exportC.toDataURL('image/png'); a.click(); };
-['showBones','showSprite','showSkin'].forEach(id=>{document.getElementById(id).addEventListener('change',()=>{buildThumbs(); draw();});});
+document.getElementById('file').addEventListener('change',e=>{const file=e.target.files[0]; if(!file) return; const url=URL.createObjectURL(file); srcImg=new Image(); srcImg.onload=()=>{slice();}; srcImg.src=url;});
+document.getElementById('autoBone').onclick=()=>{if(!frames[cur]) return; skeletons[cur]=createRigidSkeleton(frames[cur].b,cur); draw();};
+document.getElementById('btnReset').onclick=()=>{if(!frames[cur]) return; skeletons[cur]=createRigidSkeleton(frames[cur].b,cur); draw();};
+document.getElementById('btnIdle').onclick=()=>{for(let i=0;i<4;i++) skeletons[i]=createRigidSkeleton(frames[i].b,i); cur=0; buildThumbs(); draw();};
+document.getElementById('btnIdlePose').onclick=()=>{applyPreset('idle');};
+document.getElementById('btnWalkPose').onclick=()=>{applyPreset('walk');};
+document.getElementById('btnFightPose').onclick=()=>{applyPreset('fight');};
+document.getElementById('btnCopy').onclick=()=>{if(!frames[cur]) return; let base=skeletons[cur]; for(let i=0;i<4;i++){ if(i===cur) continue; let nb=frames[i].b, ob=frames[cur].b; function mapP(p){ let rx=(p.x-ob.x)/ob.w, ry=(p.y-ob.y)/ob.h; return {x: nb.x+rx*nb.w, y: nb.y+ry*nb.h}; } let ns={}; for(let k in base){ if(k.startsWith('_')) continue; ns[k]=mapP(base[k]); } ns._fixed=base._fixed; skeletons[i]=ns; } draw();};
+document.getElementById('btnZoomReset').onclick=()=>{setZoom(1);};
+document.getElementById('export').onclick=()=>{ectx.clearRect(0,0,8192,2048); frames.forEach((f,i)=>{ectx.drawImage(f.canvas,0,0,f.w,f.h,i*2048,0,2048,2048);}); const a=document.createElement('a'); a.download='original_8192.png'; a.href=exportC.toDataURL('image/png'); a.click();};
+document.getElementById('exportGreen').onclick=()=>{renderGreenStrip(); const a=document.createElement('a'); a.download='rigido_verde_4dir.png'; a.href=greenC.toDataURL('image/png'); a.click();};
 draw();
 </script>
 </body>
