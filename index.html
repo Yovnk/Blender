@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Editor RIGIDO FIX HOMBROS PEGADOS</title>
+<title>Editor RIGIDO - ZOOM NO MOLESTA</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font-family:system-ui}
 #top{background:#111;padding:8px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #222}
@@ -22,17 +22,18 @@ button{padding:11px;border-radius:8px;border:0;font-weight:700;margin-top:5px;wi
 </head>
 <body>
 <div id="top">
-<strong>RIGIDO - HOMBROS PEGADOS</strong>
+<strong>RIGIDO - ZOOM EDITABLE</strong>
 <input type="file" id="file" accept="image/*">
 <div style="display:flex;gap:6px;width:100%"><button class="ghost" id="autoBone" style="width:50%">Auto calzar</button><button class="ghost" id="btnReset" style="width:50%">Reset T-Pose</button></div>
 </div>
 <div id="canvasBox"><canvas id="c" width="1024" height="1024"></canvas><div id="zoomInfo">Zoom 1.0x</div></div>
 <div id="thumbs"></div>
 <div id="panel">
-<div id="status">FIX: hombros pegados al pecho 0.38/0.62 - columna fija - codos/rodillas movibles</div>
+<div id="status">FIX: zoom no molesta mientras arrastras</div>
 <label><input type="checkbox" id="showBones" checked> Esqueleto</label>
 <label><input type="checkbox" id="showFloor" checked> Piso 45°</label>
 <label><input type="checkbox" id="showSprite" checked> Sprite base 0.15</label>
+<label style="color:#ffeb7a"><input type="checkbox" id="autoZoomReturn" checked> Zoom vuelve solo a 1x (desactivalo para editar con zoom)</label>
 <div style="display:flex;gap:5px">
 <button class="ghost" id="btnIdle" style="width:33%">T-Pose</button>
 <button class="ghost" id="btnIdlePose" style="width:33%">IDLE</button>
@@ -83,7 +84,7 @@ function slice(){
   const cols=4, fw=srcImg.width/cols, fh=srcImg.height;
   frames=[]; skeletons=[];
   for(let i=0;i<cols;i++){const off=document.createElement('canvas'); off.width=fw; off.height=fh; off.getContext('2d').drawImage(srcImg,i*fw,0,fw,fh,0,0,fw,fh); const b=getBounds(off); frames.push({canvas:off,b:b,w:fw,h:fh}); skeletons.push(createRigidSkeleton(b,i));}
-  buildThumbs(); cur=0; draw(); log('HOMBROS PEGADOS OK');
+  buildThumbs(); cur=0; draw(); log('ZOOM EDITABLE OK');
 }
 function buildThumbs(){const cont=document.getElementById('thumbs'); cont.innerHTML=''; frames.forEach((f,i)=>{const d=document.createElement('div'); d.className='th'+(i===cur?' active':''); const mini=document.createElement('canvas'); mini.width=70; mini.height=70; mini.getContext('2d').drawImage(f.canvas,0,0,f.w,f.h,5,5,60,60); d.appendChild(mini); const sp=document.createElement('span'); sp.textContent=DIRS[i]; d.appendChild(sp); d.onclick=()=>{cur=i; buildThumbs(); draw();}; cont.appendChild(d);});}
 function solveLimb(shoulder, elbow, hand, target, lenUp, lenLow){
@@ -109,12 +110,18 @@ function setZoom(z){
   zoomLevel=Math.max(0.4, Math.min(3.5, z));
   calcView(); draw();
   clearTimeout(zoomTimeout);
+  // FIX: solo vuelve si NO estas arrastrando y si el checkbox esta activado
+  const autoReturn = document.getElementById('autoZoomReturn').checked;
+  if(!autoReturn) return;
+  if(drag) return;
   if(Math.abs(zoomLevel-1)>0.02){
     zoomTimeout=setTimeout(()=>{
+      if(drag) return;
       let start=zoomLevel;
       let startTime=Date.now();
       let duration=450;
       function animateBack(){
+        if(drag) return;
         let t=(Date.now()-startTime)/duration;
         if(t>=1){zoomLevel=1; calcView(); draw(); return;}
         let ease=1-Math.pow(1-t,3);
@@ -123,7 +130,7 @@ function setZoom(z){
         requestAnimationFrame(animateBack);
       }
       animateBack();
-    },1500);
+    },2500);
   }
 }
 function worldToScreen(p){return {x: view.ox + (p.x/frames[cur].w)*view.w, y: view.oy + (p.y/frames[cur].h)*view.h};}
@@ -141,7 +148,7 @@ function findJoint(x,y){
   } 
   return best;
 }
-function startDrag(e){if(e.touches && e.touches.length===2) return; e.preventDefault(); calcView(); const p=getPos(e); const j=findJoint(p.x,p.y); if(j) drag=j;}
+function startDrag(e){if(e.touches && e.touches.length===2) return; e.preventDefault(); clearTimeout(zoomTimeout); calcView(); const p=getPos(e); const j=findJoint(p.x,p.y); if(j) drag=j;}
 function moveDrag(e){
   if(e.touches && e.touches.length===2) return;
   if(!drag) return; e.preventDefault();
@@ -199,6 +206,8 @@ function endDrag(e){
     let now=Date.now();
     if(now-lastTap<300){ setZoom(1); }
     lastTap=now;
+  } else if(!e.changedTouches){
+    setZoom(zoomLevel);
   }
 }
 c.addEventListener('mousedown',startDrag); 
