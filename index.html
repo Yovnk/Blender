@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Editor RIGIDO - 3D + GIRO HOMBROS/CADERAS</title>
+<title>Editor RIGIDO - 1 FRAME BASE + 360° 4 DIRS</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font-family:system-ui}
 #top{background:#111;padding:8px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #222}
@@ -22,14 +22,14 @@ button{padding:11px;border-radius:8px;border:0;font-weight:700;margin-top:5px;wi
 </head>
 <body>
 <div id="top">
-<strong>RIGIDO - 3D + GIRO</strong>
+<strong>RIGIDO - 1 FRAME BASE + 360° 4 DIRS</strong>
 <input type="file" id="file" accept="image/*">
 <div style="display:flex;gap:6px;width:100%"><button class="ghost" id="autoBone" style="width:50%">Auto calzar</button><button class="ghost" id="btnReset" style="width:50%">Reset T-Pose</button></div>
 </div>
 <div id="canvasBox"><canvas id="c" width="1024" height="1024"></canvas><div id="zoomInfo">Zoom 1.0x</div></div>
 <div id="thumbs"></div>
 <div id="panel">
-<div id="status">3D ON + hombros y caderas giran para direccion</div>
+<div id="status">PNG frente centro - 1 frame base en 4 dirs - 360° hombros/caderas ON</div>
 <label><input type="checkbox" id="showBones" checked> Esqueleto 3D</label>
 <label><input type="checkbox" id="showFloor" checked> Piso 45°</label>
 <label><input type="checkbox" id="showSprite" checked> Sprite base 0.15</label>
@@ -62,7 +62,7 @@ function getBounds(canvas){
   const w=canvas.width,h=canvas.height;
   const d=canvas.getContext('2d').getImageData(0,0,w,h).data;
   let minX=w,minY=h,maxX=0,maxY=0,f=false;
-  for(let y=0;y<h;y+=3){for(let x=0;x<w;x+=3){let i=(y*w+x)*4; let r=d[i], g=d[i+1], b=d[i+2], a=d[i+3]; let br=r+g+b; if(a>20 && br>180){if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; f=true;}}}
+  for(let y=0;y<h;y+=3){for(let x=0;x<w;x+=3){let i=(y*w+x)*4; let a=d[i+3]; if(a>25){if(x<minX)minX=x; if(y<minY)minY=y; if(x>maxX)maxX=x; if(y>maxY)maxY=y; f=true;}}}
   if(!f) return {x:w*0.30,y:h*0.10,w:w*0.40,h:h*0.80};
   let pad=(maxX-minX)*0.06;
   return {x:Math.max(0,minX-pad), y:Math.max(0,minY-pad), w:Math.min(w,maxX+pad)-Math.max(0,minX-pad), h:Math.min(h,maxY+pad)-Math.max(0,minY-pad)};
@@ -79,11 +79,26 @@ function createRigidSkeleton(b, dir){
   sk._fixed={hips_spine:dist(sk.hips,sk.spine), spine_chest:dist(sk.spine,sk.chest), chest_neck:dist(sk.chest,sk.neck), neck_head:dist(sk.neck,sk.head), chest_l_sh:dist(sk.chest,sk.l_sh), chest_r_sh:dist(sk.chest,sk.r_sh), hips_l_hip:dist(sk.hips,sk.l_hip), hips_r_hip:dist(sk.hips,sk.r_hip), l_up:dist(sk.l_sh,sk.l_el), l_low:dist(sk.l_el,sk.l_ha), r_up:dist(sk.r_sh,sk.r_el), r_low:dist(sk.r_el,sk.r_ha), l_thigh:dist(sk.l_hip,sk.l_kn), l_shin:dist(sk.l_kn,sk.l_ft), r_thigh:dist(sk.r_hip,sk.r_kn), r_shin:dist(sk.r_kn,sk.r_ft)};
   return sk;
 }
+// --- FIX FINAL: 1 FRAME BASE + 360° EN 4 DIRS ---
 function slice(){
-  const cols=4, fw=srcImg.width/cols, fh=srcImg.height;
   frames=[]; skeletons=[];
-  for(let i=0;i<cols;i++){const off=document.createElement('canvas'); off.width=fw; off.height=fh; off.getContext('2d').drawImage(srcImg,i*fw,0,fw,fh,0,0,fw,fh); const b=getBounds(off); frames.push({canvas:off,b:b,w:fw,h:fh}); skeletons.push(createRigidSkeleton(b,i));}
-  buildThumbs(); cur=0; draw(); log('3D + GIRO OK');
+  let isSheet = srcImg.width > srcImg.height * 1.5;
+  let baseCanvas=document.createElement('canvas');
+  if(isSheet){
+    let fw=srcImg.width/4, fh=srcImg.height;
+    baseCanvas.width=fw; baseCanvas.height=fh;
+    baseCanvas.getContext('2d').drawImage(srcImg,0,0,fw,fh,0,0,fw,fh);
+  }else{
+    baseCanvas.width=srcImg.width; baseCanvas.height=srcImg.height;
+    baseCanvas.getContext('2d').drawImage(srcImg,0,0);
+  }
+  const b=getBounds(baseCanvas);
+  for(let i=0;i<4;i++){
+    frames.push({canvas:baseCanvas,b:b,w:baseCanvas.width,h:baseCanvas.height});
+    skeletons.push(createRigidSkeleton(b,i));
+  }
+  buildThumbs(); cur=0; draw();
+  log(isSheet ? 'Sheet 4 frames -> usando solo frame 0 en 4 dirs con 360°' : 'PNG frente centro -> mismo en 4 dirs con 360°');
 }
 function buildThumbs(){const cont=document.getElementById('thumbs'); cont.innerHTML=''; frames.forEach((f,i)=>{const d=document.createElement('div'); d.className='th'+(i===cur?' active':''); const mini=document.createElement('canvas'); mini.width=70; mini.height=70; mini.getContext('2d').drawImage(f.canvas,0,0,f.w,f.h,5,5,60,60); d.appendChild(mini); const sp=document.createElement('span'); sp.textContent=DIRS[i]; d.appendChild(sp); d.onclick=()=>{cur=i; buildThumbs(); draw();}; cont.appendChild(d);});}
 function solveLimb(shoulder, elbow, hand, target, lenUp, lenLow){
@@ -166,7 +181,6 @@ c.addEventListener('touchmove',(e)=>{ if(e.touches.length===2){ e.preventDefault
 c.addEventListener('touchend', endDrag, {passive:false});
 c.addEventListener('wheel',(e)=>{ e.preventDefault(); let delta=e.deltaY>0?0.92:1.08; setZoom(zoomLevel*delta); },{passive:false});
 c.addEventListener('dblclick',()=>{setZoom(1);});
-
 function drawFloor(){
   const W=c.width, H=c.height; const vx=W*0.5, vy=H*0.08, fy=H*0.70;
   ctx.save(); ctx.strokeStyle='#00ff55'; ctx.lineWidth=1; ctx.globalAlpha=0.85;
@@ -175,29 +189,22 @@ function drawFloor(){
   ctx.globalAlpha=1; ctx.fillStyle='#ff3333'; ctx.font='bold 13px monospace'; ctx.fillText('0°', vx-10, vy+16);
   ctx.strokeStyle='#00ff00'; ctx.lineWidth=2; ctx.globalAlpha=0.75; ctx.strokeRect(W*0.06, vy-8, W*0.88, H*0.80); ctx.restore();
 }
-
-// NUEVA FUNCION 3D CIRCULOS
 function draw3DJoint(screenPos, radius, color, type){
   const scaleY = cur===2 ? 0.45 : cur===1 || cur===3 ? 0.75 : 1.0;
   ctx.save();
   ctx.translate(screenPos.x, screenPos.y);
-  // sombra
   ctx.fillStyle='rgba(0,0,0,0.4)';
   ctx.beginPath(); ctx.ellipse(1,2, radius*1.1, radius*1.1*scaleY, 0, 0, Math.PI*2); ctx.fill();
-  // anillo exterior 3D
   ctx.strokeStyle='#fff'; ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.ellipse(0,0, radius, radius*scaleY, 0, 0, Math.PI*2); ctx.stroke();
-  // relleno con gradiente
   let grad = ctx.createRadialGradient(-radius*0.3, -radius*0.3*scaleY, radius*0.2, 0,0, radius);
   grad.addColorStop(0, '#ffffff');
   grad.addColorStop(0.3, color);
   grad.addColorStop(1, '#000000');
   ctx.fillStyle=grad;
   ctx.beginPath(); ctx.ellipse(0,0, radius*0.85, radius*0.85*scaleY, 0, 0, Math.PI*2); ctx.fill();
-  // brillito
   ctx.fillStyle='rgba(255,255,255,0.8)';
   ctx.beginPath(); ctx.ellipse(-radius*0.25, -radius*0.25*scaleY, radius*0.25, radius*0.25*scaleY, 0,0,Math.PI*2); ctx.fill();
-  // anillo de seleccion si es cadera/hombro
   if(type==='shoulder' || type==='hip'){
     ctx.strokeStyle= type==='shoulder' ? '#ffeb7a' : '#7c5cff';
     ctx.lineWidth=1; ctx.globalAlpha=0.6; ctx.setLineDash([3,3]);
@@ -206,7 +213,6 @@ function draw3DJoint(screenPos, radius, color, type){
   }
   ctx.restore();
 }
-
 function draw(){
   if(!frames[cur]){ctx.fillStyle='#000'; ctx.fillRect(0,0,c.width,c.height); if(document.getElementById('showFloor').checked) drawFloor(); return;}
   calcView(); ctx.fillStyle='#000'; ctx.fillRect(0,0,c.width,c.height);
@@ -233,7 +239,6 @@ function draw(){
       let type= isShoulder ? 'shoulder' : isHip ? 'hip' : 'joint';
       draw3DJoint(p, rad, col, type);
     }
-    // dibuja centros de giro
     const chestS=worldToScreen(sk.chest);
     const hipsS=worldToScreen(sk.hips);
     ctx.save(); ctx.fillStyle='#ffeb7a'; ctx.globalAlpha=0.3; ctx.beginPath(); ctx.arc(chestS.x,chestS.y,18,0,Math.PI*2); ctx.fill(); ctx.restore();
