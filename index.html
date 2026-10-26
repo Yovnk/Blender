@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Editor RIGIDO + ZOOM FIX FINAL</title>
+<title>Editor RIGIDO FIX HOMBROS PEGADOS</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font-family:system-ui}
 #top{background:#111;padding:8px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #222}
@@ -22,14 +22,14 @@ button{padding:11px;border-radius:8px;border:0;font-weight:700;margin-top:5px;wi
 </head>
 <body>
 <div id="top">
-<strong>RIGIDO + ZOOM FIX FINAL - Columna Centrada</strong>
+<strong>RIGIDO - HOMBROS PEGADOS</strong>
 <input type="file" id="file" accept="image/*">
 <div style="display:flex;gap:6px;width:100%"><button class="ghost" id="autoBone" style="width:50%">Auto calzar</button><button class="ghost" id="btnReset" style="width:50%">Reset T-Pose</button></div>
 </div>
 <div id="canvasBox"><canvas id="c" width="1024" height="1024"></canvas><div id="zoomInfo">Zoom 1.0x</div></div>
 <div id="thumbs"></div>
 <div id="panel">
-<div id="status">FIX FINAL: columna centrada fija + codos/rodillas movibles + punto rojo sigue</div>
+<div id="status">FIX: hombros pegados al pecho 0.38/0.62 - columna fija - codos/rodillas movibles</div>
 <label><input type="checkbox" id="showBones" checked> Esqueleto</label>
 <label><input type="checkbox" id="showFloor" checked> Piso 45°</label>
 <label><input type="checkbox" id="showSprite" checked> Sprite base 0.15</label>
@@ -70,10 +70,10 @@ function createRigidSkeleton(b, dir){
   const x=b.x,y=b.y,w=b.w,h=b.h;
   const P=(rx,ry)=>({x:x+rx*w, y:y+ry*h});
   let sk;
-  if(dir===0) sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.50,0.30), head:P(0.50,0.15), l_sh:P(0.28,0.39), l_el:P(0.12,0.41), l_ha:P(0.03,0.43), r_sh:P(0.72,0.39), r_el:P(0.88,0.41), r_ha:P(0.97,0.43), l_hip:P(0.44,0.64), l_kn:P(0.39,0.81), l_ft:P(0.35,0.96), r_hip:P(0.56,0.64), r_kn:P(0.61,0.81), r_ft:P(0.65,0.96)};
-  else if(dir===1) sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.51,0.30), head:P(0.52,0.15), l_sh:P(0.32,0.38), l_el:P(0.18,0.40), l_ha:P(0.09,0.42), r_sh:P(0.70,0.39), r_el:P(0.82,0.41), r_ha:P(0.91,0.43), l_hip:P(0.45,0.64), l_kn:P(0.41,0.81), l_ft:P(0.38,0.96), r_hip:P(0.55,0.64), r_kn:P(0.60,0.81), r_ft:P(0.63,0.96)};
-  else if(dir===2) sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.52,0.30), head:P(0.54,0.15), l_sh:P(0.54,0.38), l_el:P(0.66,0.39), l_ha:P(0.76,0.40), r_sh:P(0.48,0.38), r_el:P(0.40,0.39), r_ha:P(0.32,0.40), l_hip:P(0.50,0.64), l_kn:P(0.54,0.81), l_ft:P(0.56,0.96), r_hip:P(0.48,0.64), r_kn:P(0.46,0.81), r_ft:P(0.44,0.96)};
-  else sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.49,0.30), head:P(0.48,0.15), l_sh:P(0.34,0.38), l_el:P(0.22,0.40), l_ha:P(0.12,0.42), r_sh:P(0.66,0.39), r_el:P(0.74,0.40), r_ha:P(0.82,0.41), l_hip:P(0.45,0.64), l_kn:P(0.43,0.81), l_ft:P(0.41,0.96), r_hip:P(0.55,0.64), r_kn:P(0.57,0.81), r_ft:P(0.59,0.96)};
+  if(dir===0) sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.50,0.30), head:P(0.50,0.15), l_sh:P(0.38,0.39), l_el:P(0.22,0.42), l_ha:P(0.10,0.45), r_sh:P(0.62,0.39), r_el:P(0.78,0.42), r_ha:P(0.90,0.45), l_hip:P(0.44,0.64), l_kn:P(0.39,0.81), l_ft:P(0.35,0.96), r_hip:P(0.56,0.64), r_kn:P(0.61,0.81), r_ft:P(0.65,0.96)};
+  else if(dir===1) sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.51,0.30), head:P(0.52,0.15), l_sh:P(0.40,0.38), l_el:P(0.24,0.40), l_ha:P(0.12,0.42), r_sh:P(0.62,0.39), r_el:P(0.78,0.41), r_ha:P(0.88,0.43), l_hip:P(0.45,0.64), l_kn:P(0.41,0.81), l_ft:P(0.38,0.96), r_hip:P(0.55,0.64), r_kn:P(0.60,0.81), r_ft:P(0.63,0.96)};
+  else if(dir===2) sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.52,0.30), head:P(0.54,0.15), l_sh:P(0.48,0.38), l_el:P(0.58,0.39), l_ha:P(0.68,0.40), r_sh:P(0.52,0.38), r_el:P(0.42,0.39), r_ha:P(0.34,0.40), l_hip:P(0.50,0.64), l_kn:P(0.54,0.81), l_ft:P(0.56,0.96), r_hip:P(0.48,0.64), r_kn:P(0.46,0.81), r_ft:P(0.44,0.96)};
+  else sk={hips:P(0.50,0.62), spine:P(0.50,0.50), chest:P(0.50,0.38), neck:P(0.49,0.30), head:P(0.48,0.15), l_sh:P(0.40,0.38), l_el:P(0.26,0.40), l_ha:P(0.16,0.42), r_sh:P(0.60,0.39), r_el:P(0.72,0.40), r_ha:P(0.80,0.41), l_hip:P(0.45,0.64), l_kn:P(0.43,0.81), l_ft:P(0.41,0.96), r_hip:P(0.55,0.64), r_kn:P(0.57,0.81), r_ft:P(0.59,0.96)};
   function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
   sk._fixed={hips_spine:dist(sk.hips,sk.spine), spine_chest:dist(sk.spine,sk.chest), chest_neck:dist(sk.chest,sk.neck), neck_head:dist(sk.neck,sk.head), l_up:dist(sk.l_sh,sk.l_el), l_low:dist(sk.l_el,sk.l_ha), r_up:dist(sk.r_sh,sk.r_el), r_low:dist(sk.r_el,sk.r_ha), l_thigh:dist(sk.l_hip,sk.l_kn), l_shin:dist(sk.l_kn,sk.l_ft), r_thigh:dist(sk.r_hip,sk.r_kn), r_shin:dist(sk.r_kn,sk.r_ft)};
   sk._center={x:b.x+b.w*0.50, y:b.y+b.h*0.62};
@@ -83,7 +83,7 @@ function slice(){
   const cols=4, fw=srcImg.width/cols, fh=srcImg.height;
   frames=[]; skeletons=[];
   for(let i=0;i<cols;i++){const off=document.createElement('canvas'); off.width=fw; off.height=fh; off.getContext('2d').drawImage(srcImg,i*fw,0,fw,fh,0,0,fw,fh); const b=getBounds(off); frames.push({canvas:off,b:b,w:fw,h:fh}); skeletons.push(createRigidSkeleton(b,i));}
-  buildThumbs(); cur=0; draw(); log('FIX FINAL OK');
+  buildThumbs(); cur=0; draw(); log('HOMBROS PEGADOS OK');
 }
 function buildThumbs(){const cont=document.getElementById('thumbs'); cont.innerHTML=''; frames.forEach((f,i)=>{const d=document.createElement('div'); d.className='th'+(i===cur?' active':''); const mini=document.createElement('canvas'); mini.width=70; mini.height=70; mini.getContext('2d').drawImage(f.canvas,0,0,f.w,f.h,5,5,60,60); d.appendChild(mini); const sp=document.createElement('span'); sp.textContent=DIRS[i]; d.appendChild(sp); d.onclick=()=>{cur=i; buildThumbs(); draw();}; cont.appendChild(d);});}
 function solveLimb(shoulder, elbow, hand, target, lenUp, lenLow){
@@ -262,14 +262,14 @@ function applyPreset(type){
   if(!frames[cur]) return;
   const sk=skeletons[cur]; const b=frames[cur].b;
   if(type==='idle'){
-    sk.l_sh.x=b.x+b.w*0.32; sk.l_el.x=b.x+b.w*0.29; sk.l_el.y=b.y+b.h*0.55; sk.l_ha.x=b.x+b.w*0.28; sk.l_ha.y=b.y+b.h*0.66;
-    sk.r_sh.x=b.x+b.w*0.68; sk.r_el.x=b.x+b.w*0.71; sk.r_el.y=b.y+b.h*0.55; sk.r_ha.x=b.x+b.w*0.72; sk.r_ha.y=b.y+b.h*0.66;
+    sk.l_sh.x=b.x+b.w*0.40; sk.l_el.x=b.x+b.w*0.32; sk.l_el.y=b.y+b.h*0.55; sk.l_ha.x=b.x+b.w*0.28; sk.l_ha.y=b.y+b.h*0.66;
+    sk.r_sh.x=b.x+b.w*0.60; sk.r_el.x=b.x+b.w*0.68; sk.r_el.y=b.y+b.h*0.55; sk.r_ha.x=b.x+b.w*0.72; sk.r_ha.y=b.y+b.h*0.66;
   } else if(type==='walk'){
     sk.l_kn.x=b.x+b.w*0.32; sk.l_kn.y=b.y+b.h*0.78; sk.l_ft.x=b.x+b.w*0.22; sk.l_ft.y=b.y+b.h*0.94;
     sk.r_kn.x=b.x+b.w*0.68; sk.r_kn.y=b.y+b.h*0.82; sk.r_ft.x=b.x+b.w*0.78; sk.r_ft.y=b.y+b.h*0.95;
   } else if(type==='fight'){
-    sk.l_el.x=b.x+b.w*0.26; sk.l_el.y=b.y+b.h*0.47; sk.l_ha.x=b.x+b.w*0.28; sk.l_ha.y=b.y+b.h*0.53;
-    sk.r_el.x=b.x+b.w*0.72; sk.r_el.y=b.y+b.h*0.49; sk.r_ha.x=b.x+b.w*0.64; sk.r_ha.y=b.y+b.h*0.55;
+    sk.l_el.x=b.x+b.w*0.32; sk.l_el.y=b.y+b.h*0.47; sk.l_ha.x=b.x+b.w*0.34; sk.l_ha.y=b.y+b.h*0.53;
+    sk.r_el.x=b.x+b.w*0.68; sk.r_el.y=b.y+b.h*0.49; sk.r_ha.x=b.x+b.w*0.64; sk.r_ha.y=b.y+b.h*0.55;
     sk.l_kn.x=b.x+b.w*0.34; sk.l_kn.y=b.y+b.h*0.76; sk.l_ft.x=b.x+b.w*0.26; sk.l_ft.y=b.y+b.h*0.93;
     sk.r_kn.x=b.x+b.w*0.66; sk.r_kn.y=b.y+b.h*0.80; sk.r_ft.x=b.x+b.w*0.76; sk.r_ft.y=b.y+b.h*0.94;
   }
